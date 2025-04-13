@@ -369,7 +369,6 @@ const RegisterLoan = () => {
                   width: "100%",
                   textAlign: "left",
                   borderCollapse: "collapse",
-                  fontFamily: "Arial, sans-serif",
                   border: "1px solid #ddd",
                   backgroundColor: "#f9f9f9",
                 }}
@@ -462,7 +461,6 @@ const RegisterLoan = () => {
                   width: "100%",
                   textAlign: "left",
                   borderCollapse: "collapse",
-                  fontFamily: "Arial, sans-serif",
                   border: "1px solid #ddd",
                 }}
               >

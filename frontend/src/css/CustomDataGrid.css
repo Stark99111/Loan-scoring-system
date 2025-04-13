@@ -1,0 +1,17 @@
+.custom-datagrid {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .custom-datagrid th,
+  .custom-datagrid td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+  
+  .custom-datagrid th {
+    background-color: #f5f5f5;
+    cursor: pointer;
+  }
+  

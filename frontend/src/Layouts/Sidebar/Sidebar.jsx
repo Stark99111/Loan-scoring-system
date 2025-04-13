@@ -7,7 +7,9 @@ import {
   ListItemText,
   Box,
   Typography,
+  IconButton,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import ListItemButton from "@mui/material/ListItemButton";
 import InfoIcon from "@mui/icons-material/Info";
 import BigImage from "../../Assets/bigimage.png";
@@ -15,9 +17,14 @@ import Image from "../../Assets/image.png";
 import CreateIcon from "@mui/icons-material/Create";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
-import TouchAppIcon from "@mui/icons-material/TouchApp";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { Link } from "react-router-dom";
+import CalculateIcon from "@mui/icons-material/Calculate";
+import PolicyIcon from "@mui/icons-material/Policy";
+import ArticleIcon from "@mui/icons-material/Article";
+import StickyNote2Icon from "@mui/icons-material/StickyNote2";
+import PlagiarismIcon from "@mui/icons-material/Plagiarism";
+import ContentPasteIcon from "@mui/icons-material/ContentPaste";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 
 function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,32 +32,26 @@ function Sidebar() {
   const user = JSON.parse(localStorage.getItem("user"));
   console.log(user);
 
-  const handleMouseEnter = () => {
-    setIsSidebarOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsSidebarOpen(false);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
   };
 
   const logout = () => {
-    localStorage.removeItem("jwtToken"); // Remove the token from localStorage
+    localStorage.removeItem("jwtToken");
     console.log("JWT token removed from localStorage");
-    window.location.reload(); // Optional: Reload or redirect the user
+    window.location.reload();
   };
 
   return (
     <Drawer
       variant="permanent"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       sx={{
-        width: isSidebarOpen ? 240 : 60,
+        width: isSidebarOpen ? 280 : 60,
         flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         "& .MuiDrawer-paper": {
-          width: isSidebarOpen ? 240 : 60,
+          width: isSidebarOpen ? 280 : 60,
           boxSizing: "border-box",
           transition: "width 0.3s ease",
           backgroundColor: "#1a1c1d",
@@ -58,9 +59,24 @@ function Sidebar() {
         },
       }}
     >
+      {/* Toggle Button */}
       <Box
         sx={{
-          paddingTop: 3,
+          paddingTop: 2,
+          paddingBottom: 2,
+          display: "flex",
+          justifyContent: isSidebarOpen ? "flex-end" : "center",
+          paddingX: 2,
+        }}
+      >
+        <IconButton onClick={toggleSidebar} sx={{ color: "white" }}>
+          <MenuIcon />
+        </IconButton>
+      </Box>
+
+      {/* Logo */}
+      <Box
+        sx={{
           paddingBottom: 3,
           display: "flex",
           justifyContent: "center",
@@ -76,11 +92,12 @@ function Sidebar() {
               width: "auto",
               height: "100%",
               objectFit: "contain",
-              cursor: "pointer", // Add pointer cursor for better UX
+              cursor: "pointer",
             }}
           />
         </Link>
       </Box>
+
       {isSidebarOpen ? (
         <></>
       ) : (
@@ -90,11 +107,11 @@ function Sidebar() {
       )}
       <Box sx={{ flexGrow: 1 }}>
         <Box paddingLeft={3}>
-          <Typography color="white" fontSize={24} fontFamily={"Cambria"}>
+          <Typography color="white" fontSize={24}>
             {isSidebarOpen ? "Зээл" : "-"}
           </Typography>
         </Box>
-        <Box sx={{ width: 250 }} role="presentation">
+        <Box sx={{ width: 280 }} role="presentation">
           <List>
             <ListItem key={"Зээлийн мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/loanInformation">
@@ -107,141 +124,41 @@ function Sidebar() {
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
                     fontSize: 16,
-                    fontFamily: "Cambria",
                     color: "white",
                   }}
                   primary={"Зээлийн мэдээлэл"}
                 />
               </ListItemButton>
             </ListItem>
-            {roleId !== "3" ? (
-              <>
-                <ListItem key={"Зээл бүртгэх"} disablePadding>
-                  <ListItemButton component={Link} to="/createLoan">
-                    <ListItemIcon
-                      sx={{
-                        color: "white",
-                        paddingLeft: isSidebarOpen ? 1 : 0,
-                      }}
-                    >
-                      <CreateIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ color: "white" }}
-                      primaryTypographyProps={{
-                        fontSize: 16,
-                        fontFamily: "Cambria",
-                        color: "white",
-                      }}
-                      primary={"Зээл бүртгэх"}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              </>
-            ) : (
-              <></>
-            )}
-
-            {roleId === "3" ? (
-              <>
-                <ListItem key={"Зээлийн мэдээлэл бүртгэх"} disablePadding>
-                  <ListItemButton component={Link} to="/registerLoan">
-                    <ListItemIcon
-                      sx={{
-                        color: "white",
-                        paddingLeft: isSidebarOpen ? 1 : 0,
-                      }}
-                    >
-                      <LibraryAddIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ color: "white" }}
-                      primaryTypographyProps={{
-                        fontSize: 16,
-                        fontFamily: "Cambria",
-                        color: "white",
-                      }}
-                      primary={"Зээлийн мэдээлэл бүртгэх"}
-                    />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem key={"Зээлийн төлөв"} disablePadding>
-                  <ListItemButton component={Link} to="/changeStatus">
-                    <ListItemIcon
-                      sx={{
-                        color: "white",
-                        paddingLeft: isSidebarOpen ? 1 : 0,
-                      }}
-                    >
-                      <TouchAppIcon fontSize="medium" />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ color: "white" }}
-                      primaryTypographyProps={{
-                        fontSize: 16,
-                        fontFamily: "Cambria",
-                        color: "white",
-                      }}
-                      primary={"Зээлийн төлөв"}
-                    />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem key={"Зээлийн шаардлага"} disablePadding>
-                  <ListItemButton component={Link} to="/editRequirement">
-                    <ListItemIcon
-                      sx={{
-                        color: "white",
-                        paddingLeft: isSidebarOpen ? 1 : 0,
-                      }}
-                    >
-                      <SettingsIcon fontSize="medium" />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ color: "white" }}
-                      primaryTypographyProps={{
-                        fontSize: 16,
-                        fontFamily: "Cambria",
-                        color: "white",
-                      }}
-                      primary={"Зээлийн шаардлага"}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              </>
-            ) : (
-              <></>
-            )}
-          </List>
-        </Box>
-        <Box paddingLeft={3}>
-          <Typography color="white" fontSize={24} fontFamily={"Cambria"}>
-            {isSidebarOpen ? "Тайлан" : "-"}
-          </Typography>
-        </Box>
-        <Box sx={{ width: 250 }} role="presentation">
-          <List>
-            <ListItem key={"Зээлийн журам"} disablePadding>
-              <ListItemButton component={Link} to="/loanProcedure">
+            <ListItem key={"Зээл бүртгэх"} disablePadding>
+              <ListItemButton component={Link} to="/createLoan">
                 <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                  sx={{
+                    color: "white",
+                    paddingLeft: isSidebarOpen ? 1 : 0,
+                  }}
                 >
-                  <InfoIcon />
+                  <LibraryAddIcon />
                 </ListItemIcon>
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
                     fontSize: 16,
-                    fontFamily: "Cambria",
                     color: "white",
                   }}
-                  primary={"Зээлийн журам"}
+                  primary={"Зээл бүртгэх"}
                 />
+                {/* /changeStatus төлөв өөрчлөх */}
+                {/* /editRequirement  Шаардлага засах*/}
               </ListItemButton>
             </ListItem>
-            <ListItem key={"Журмын биелэлтийн тайлан"} disablePadding>
-              <ListItemButton component={Link} to="/procedureReport">
+            <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
+              <ListItemButton component={Link} to="/registerLoan">
                 <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                  sx={{
+                    color: "white",
+                    paddingLeft: isSidebarOpen ? 1 : 0,
+                  }}
                 >
                   <CreateIcon />
                 </ListItemIcon>
@@ -249,7 +166,152 @@ function Sidebar() {
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
                     fontSize: 16,
-                    fontFamily: "Cambria",
+                    color: "white",
+                  }}
+                  primary={"Зээлийн мэдээлэл засах"}
+                />
+              </ListItemButton>
+            </ListItem>
+            <ListItem key={"Тооцоолуур"} disablePadding>
+              <ListItemButton component={Link} to="/loanAmountCalculater">
+                <ListItemIcon
+                  sx={{
+                    color: "white",
+                    paddingLeft: isSidebarOpen ? 1 : 0,
+                  }}
+                >
+                  <CalculateIcon fontSize="medium" />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Тооцоолуур"}
+                />
+              </ListItemButton>
+            </ListItem>
+            <ListItem key={"Зээлийн эрсдэл"} disablePadding>
+              <ListItemButton component={Link} to="/editRequirement">
+                <ListItemIcon
+                  sx={{
+                    color: "white",
+                    paddingLeft: isSidebarOpen ? 1 : 0,
+                  }}
+                >
+                  <PolicyIcon fontSize="medium" />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Зээлийн эрсдэл"}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Box>
+        <Box paddingLeft={3}>
+          <Typography color="white" fontSize={24}>
+            {isSidebarOpen ? "Скоринг" : "-"}
+          </Typography>
+        </Box>
+        <Box sx={{ width: 280 }} role="presentation">
+          <List>
+            <ListItem key={"Тооцоолуур"} disablePadding>
+              <ListItemButton component={Link} to="/loanAmountCalculater">
+                <ListItemIcon
+                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                >
+                  <RequestQuoteIcon />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Тооцоолуур"}
+                />
+              </ListItemButton>
+            </ListItem>
+            <ListItem key={"Дэлгэрэнгүй"} disablePadding>
+              <ListItemButton component={Link} to="/procedureReport">
+                <ListItemIcon
+                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                >
+                  <StickyNote2Icon />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Дэлгэрэнгүй"}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Box>
+        <Box paddingLeft={3}>
+          <Typography color="white" fontSize={24}>
+            {isSidebarOpen ? "Тайлан" : "-"}
+          </Typography>
+        </Box>
+        <Box sx={{ width: 280 }} role="presentation">
+          <List>
+            {/* zeeliin juram */}
+            <ListItem key={"Зээлийн журам"} disablePadding>
+              <ListItemButton component={Link} to="/loanProcedure">
+                <ListItemIcon
+                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                >
+                  <ContentPasteIcon />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Зээлийн журам"}
+                />
+              </ListItemButton>
+            </ListItem>
+            {/* zeeliin ereltiin tailan */}
+            <ListItem key={"Зээлийн эрэлтийн тайлан"} disablePadding>
+              <ListItemButton component={Link} to="/loanProcedure">
+                <ListItemIcon
+                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                >
+                  <PlagiarismIcon />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                  primary={"Зээлийн эрэлтийн тайлан"}
+                />
+              </ListItemButton>
+            </ListItem>
+            {/* jurmiin biyleltiin tailan */}
+            <ListItem key={"Журмын биелэлтийн тайлан"} disablePadding>
+              <ListItemButton component={Link} to="/procedureReport">
+                <ListItemIcon
+                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
+                >
+                  <ArticleIcon />
+                </ListItemIcon>
+                <ListItemText
+                  sx={{ color: "white" }}
+                  primaryTypographyProps={{
+                    fontSize: 16,
                     color: "white",
                   }}
                   primary={"Журмын биелэлтийн тайлан"}
@@ -270,10 +332,11 @@ function Sidebar() {
           opacity: isSidebarOpen ? 1 : 0,
         }}
       >
-        <Typography color="white" fontSize={18} fontFamily={"Cambria"}>
+        <Typography color="white" fontSize={18}>
           {isSidebarOpen ? user?.firstname + " - " + user?.domain : "-"}
         </Typography>
       </Box>
+
       <Box>
         <List>
           <ListItem disablePadding>
@@ -287,7 +350,6 @@ function Sidebar() {
                 sx={{ color: "white" }}
                 primaryTypographyProps={{
                   fontSize: 16,
-                  fontFamily: "Cambria",
                   color: "white",
                 }}
                 primary="Log out"

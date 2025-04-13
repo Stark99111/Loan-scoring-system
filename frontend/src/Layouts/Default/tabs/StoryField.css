@@ -1,0 +1,51 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+.container {
+  width: "100%";
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background-color: #ffffff;
+}
+.content-box {
+  width: 800px;
+  display: flex;
+  gap: 10px;
+}
+.card {
+  width: 200px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btns {
+  gap: 60px;
+}
+
+.action-btns button {
+  font-size: 25px;
+  font-weight: 500;
+  color: #002d36;
+  background-color: #ffffff;
+  border-radius: 6px;
+  padding: 5px 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+/* Hide scrollbar for all browsers */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

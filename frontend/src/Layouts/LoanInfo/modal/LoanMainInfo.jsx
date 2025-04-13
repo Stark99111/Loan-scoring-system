@@ -103,7 +103,6 @@ const LoanDetailsModal = ({ id, style }) => {
             "& .MuiTab-root": {
               fontWeight: "bold",
               fontSize: "16px",
-              fontFamily: "Arial, sans-serif",
               textTransform: "none",
             },
             "& .Mui-selected": {

@@ -10,18 +10,18 @@ import Login from "./Layouts/Login/index.jsx";
 import RegisterLoanInfo from "./Layouts/RegisterLoanInfo/RegisterLoanInfo.jsx";
 import ChangeStatus from "./Layouts/ChangeStatus/ChangeStatus.jsx";
 import EditRequirement from "./Layouts/EditRequirement/EditRequirement.jsx";
+import LoanAmountCalculater from "./Layouts/LoanAmountCalculater/LoanAmountCalculater.jsx";
+import Default from "./Layouts/Default/Default.jsx";
+import Footer from "./Layouts/Footer/Footer.jsx";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Simulate JWT token validation
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
     if (token) {
       try {
-        // Add your token validation logic here
-        // For example, decode the token and check its expiration
-        const isValid = validateToken(token); // Replace with your actual validation function
+        const isValid = validateToken(token);
         setIsAuthenticated(isValid);
       } catch (err) {
         console.error("Invalid token:", err);
@@ -32,31 +32,27 @@ const App = () => {
     }
   }, []);
 
-  // Replace this with your actual token validation logic
-  const validateToken = (token) => {
-    // For simplicity, we'll assume the token is valid if it exists.
-    // Add real validation here (e.g., decode the JWT and check expiration).
-    return token.length > 10; // Example validation
-  };
+  const validateToken = (token) => token.length > 10;
 
   return (
     <BrowserRouter>
-      <Box display={isAuthenticated ? "flex" : 0}>
-        <CssBaseline />
-        {isAuthenticated ? (
-          <>
-            <Sidebar />
-            <Box
-              component="main"
-              sx={{
-                flexGrow: 1,
-                p: 4,
-                bgcolor: "#dddfe3",
-                minHeight: "100vh",
-              }}
-            >
+      <CssBaseline />
+      {isAuthenticated ? (
+        <Box display="flex" minHeight="100vh">
+          <Sidebar />
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              bgcolor: "#dddfe3",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: "100vh",
+            }}
+          >
+            <Box sx={{ flexGrow: 1, p: 4 }}>
               <Routes>
-                <Route path="/" element={<Navigate to="/loanInformation" />} />
+                <Route path="/" element={<Default />} />
                 <Route path="/loanInformation" element={<LoanInfo />} />
                 <Route path="/createLoan" element={<RegisterLoan />} />
                 <Route path="/loanProcedure" element={<LoanProcedure />} />
@@ -64,15 +60,22 @@ const App = () => {
                 <Route path="/registerLoan" element={<RegisterLoanInfo />} />
                 <Route path="/changeStatus" element={<ChangeStatus />} />
                 <Route path="/editRequirement" element={<EditRequirement />} />
+                <Route
+                  path="/loanAmountCalculater"
+                  element={<LoanAmountCalculater />}
+                />
               </Routes>
             </Box>
-          </>
-        ) : (
-          <Routes>
-            <Route path="/*" element={<Login />} />
-          </Routes>
-        )}
-      </Box>
+            <Box sx={{ flexGrow: 1, p: 4, pt: 1 }}>
+              <Footer />
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        <Routes>
+          <Route path="/*" element={<Login />} />
+        </Routes>
+      )}
     </BrowserRouter>
   );
 };
