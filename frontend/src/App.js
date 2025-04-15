@@ -10,7 +10,7 @@ import Login from "./Layouts/Login/index.jsx";
 import RegisterLoanInfo from "./Layouts/RegisterLoanInfo/RegisterLoanInfo.jsx";
 import ChangeStatus from "./Layouts/ChangeStatus/ChangeStatus.jsx";
 import EditRequirement from "./Layouts/EditRequirement/EditRequirement.jsx";
-import LoanAmountCalculater from "./Layouts/LoanAmountCalculater/LoanAmountCalculater.jsx";
+import LoanAmountCalculater from "./Layouts/Calculater/Calculater.jsx";
 import Default from "./Layouts/Default/Default.jsx";
 import Footer from "./Layouts/Footer/Footer.jsx";
 
