@@ -8,7 +8,7 @@ const LoanSchema = new mongoose.Schema({
   image: {
     type: String,
   },
-  categories: {
+  loanCategories: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "category",
   },
@@ -30,6 +30,10 @@ const LoanSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+  },
+  bankCategories: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "category",
   },
 });
 

@@ -42,6 +42,7 @@ const LoanDetailsModal = ({ id, style }) => {
       height={"auto"}
       display="flex"
       justifyContent="space-between"
+      borderRadius={5}
     >
       {/* Image Section */}
       <Grid2 size={4} pl={1}>

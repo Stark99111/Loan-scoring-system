@@ -26,6 +26,7 @@ router.post("/register", async (req, res) => {
     const {
       name,
       categoryNums,
+      bankCategoryNums,
       reqDescriptions,
       conDescriptions,
       image,
@@ -46,14 +47,20 @@ router.post("/register", async (req, res) => {
     let categories = [];
     let conditions = [];
     let requirements = [];
+    let bankCategories = [];
 
-    // Fetch categories by categoryNums
-    if (categoryNums) {
-      categories = await CategoryModel.find({
-        CategoryCode: categoryNums,
-      });
+    categories = await CategoryModel.find({
+      CategoryCode: "67571dc27e3de1a6814437df",
+    });
 
-      if (!categories) {
+    if (!categories) {
+      return res.status(404).json({ message: "Some categories not found" });
+    }
+
+    if (bankCategoryNums) {
+      bankCategories = await CategoryModel.find({ CategoryCode: categoryNums });
+
+      if (!bankCategories) {
         return res.status(404).json({ message: "Some categories not found" });
       }
     }
@@ -94,6 +101,7 @@ router.post("/register", async (req, res) => {
       categories: categories.map((category) => category._id),
       conditions: conditions.map((condition) => condition._id),
       requirements: requirements.map((requirement) => requirement._id),
+      bankCategories: bankCategories.map((bankCategory) => bankCategory._id),
     });
 
     // Save new loan to the database

@@ -180,12 +180,12 @@ const LoanInfo = () => {
       <Grid2
         container
         gap={2}
-        justifyContent={"space-around"}
+        display={"flex"}
+        justifyContent={"center"}
         bgcolor={"white"}
         borderRadius={2}
         p={3}
       >
-        <Grid2 size={2.3}></Grid2>
         <Grid2 size={8}>
           <Tabs
             value={value}
@@ -196,6 +196,8 @@ const LoanInfo = () => {
                 fontWeight: "bold",
                 fontSize: "16px",
                 textTransform: "none",
+                display: "flex",
+                justifyContent: "center",
               },
               "& .Mui-selected": {
                 fontWeight: "bold",
@@ -229,16 +231,18 @@ const LoanInfo = () => {
         <CustomTabPanel value={value} index={5}>
           {renderTabContent("67571dd07e3de1a6814437e2")}
         </CustomTabPanel>
-        <Modal
-          open={loanModal}
-          onClose={handleClose}
-          aria-labelledby="parent-modal-title"
-          aria-describedby="parent-modal-description"
-        >
-          <Box sx={{ ...style, width: 900 }}>
-            <LoanDetailsModal id={id} style={style} />
-          </Box>
-        </Modal>
+        <Grid2 size={12}>
+          <Modal
+            open={loanModal}
+            onClose={handleClose}
+            aria-labelledby="parent-modal-title"
+            aria-describedby="parent-modal-description"
+          >
+            <Box sx={{ ...style, width: 900, borderRadius: 3 }}>
+              <LoanDetailsModal id={id} style={style} />
+            </Box>
+          </Modal>
+        </Grid2>
       </Grid2>
     </>
   );

@@ -42,6 +42,7 @@ const CustomDataGrid = ({ columns, data }) => {
               onClick={() => handleSort(col.accessor)}
               style={{
                 width: `${((col.flex || 1) / totalFlex) * 100}%`,
+                backgroundColor: "#dddee0",
               }}
             >
               {col.label}
@@ -60,6 +61,7 @@ const CustomDataGrid = ({ columns, data }) => {
                 style={{
                   height: "30px",
                   width: `${((col.flex || 1) / totalFlex) * 100}%`,
+                  borderBottom: "0px solid white",
                 }}
               >
                 {col.numberFormat

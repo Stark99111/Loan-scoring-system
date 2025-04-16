@@ -30,7 +30,7 @@ const RegisterLoanInfo = () => {
     GetCategories().then((data) => {
       if (data) {
         const LoanOptions = data.data.filter(
-          (item) => item.Description === "Зээлийн төрөл"
+          (item) => item.Description === "Банкны төрөл"
         );
         setLoanOptions(LoanOptions);
       }
@@ -124,11 +124,11 @@ const RegisterLoanInfo = () => {
         </Grid2>
         <Grid2 size={2}>
           <FormControl fullWidth size="small">
-            <InputLabel id="loan-type-label">Зээлийн төрөл</InputLabel>
+            <InputLabel id="loan-type-label">Банкны төрөл</InputLabel>
             <Select
               labelId="loan-type-label"
               defaultValue=""
-              label={"Зээлийн төрөл"}
+              label={"Банкны төрөл"}
               size="small"
               value={loanType}
               onChange={(e) => setLoanType(e.target.value)}
