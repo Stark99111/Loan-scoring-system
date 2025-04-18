@@ -7,12 +7,13 @@ import RegisterLoan from "./Layouts/RegisterLoan/RegisterLoan.jsx";
 import LoanProcedure from "./Layouts/LoanProcedure/LoanProcedure.jsx";
 import ProcedureReport from "./Layouts/ProcedureReport/ProcedureReport.jsx";
 import Login from "./Layouts/Login/index.jsx";
-import RegisterLoanInfo from "./Layouts/RegisterLoanInfo/RegisterLoanInfo.jsx";
-import ChangeStatus from "./Layouts/ChangeStatus/ChangeStatus.jsx";
+import RegisterLoanInfo from "./Layouts/EditLoanTab/RegisterLoanInfo/RegisterLoanInfo.jsx";
+import ChangeStatus from "./Layouts/EditLoanTab/ChangeStatus/ChangeStatus.jsx";
 import EditRequirement from "./Layouts/EditRequirement/EditRequirement.jsx";
 import LoanAmountCalculater from "./Layouts/Calculater/Calculater.jsx";
 import Default from "./Layouts/Default/Default.jsx";
 import Footer from "./Layouts/Footer/Footer.jsx";
+import EditLoanInformation from "./Layouts/EditLoanInformation/EditLoanInformation.jsx";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -55,6 +56,10 @@ const App = () => {
                 <Route path="/" element={<Default />} />
                 <Route path="/loanInformation" element={<LoanInfo />} />
                 <Route path="/createLoan" element={<RegisterLoan />} />
+                <Route
+                  path="/editLoanInformation"
+                  element={<EditLoanInformation />}
+                />
                 <Route path="/loanProcedure" element={<LoanProcedure />} />
                 <Route path="/procedureReport" element={<ProcedureReport />} />
                 <Route path="/registerLoan" element={<RegisterLoanInfo />} />
@@ -66,7 +71,7 @@ const App = () => {
                 />
               </Routes>
             </Box>
-            <Box sx={{ flexGrow: 1, p: 4, pt: 1 }}>
+            <Box sx={{ p: 2, pt: 0 }}>
               <Footer />
             </Box>
           </Box>

@@ -8,18 +8,19 @@ const Footer = () => {
   return (
     <Grid2
       container
-      bgcolor="white"
-      borderRadius={4}
-      p={3}
+      // bgcolor="white"
+      // borderRadius={5}
+      pl={5}
+      pr={5}
       direction={"row"}
       justifyContent={"space-around"}
       spacing={2}
     >
-      <Grid2 size={3}>
-        <Typography variant="h6" fontWeight={600} gutterBottom width={"100%"}>
+      <Grid2 size={4}>
+        <Typography variant="h6" fontWeight={600} gutterBottom width={"80%"}>
           Зээлийн онооны систем
         </Typography>
-        <Typography variant="body2" sx={{ mb: 2 }}>
+        <Typography variant="body2" sx={{ mb: 2 }} width={"80%"}>
           Монгол улс, Улаанбаатар хот, Сүхбаатар дүүрэг, 1-р хороо, Сөүлийн
           гудамж, Соёмбо Тауэр, A блок, 23 давхар, #2303
         </Typography>
@@ -69,7 +70,7 @@ const Footer = () => {
       </Grid2>
 
       {/* Column 4 */}
-      <Grid2 size={3}>
+      <Grid2 size={2}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
           Холбоо барих
         </Typography>

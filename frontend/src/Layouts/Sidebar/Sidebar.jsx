@@ -153,7 +153,8 @@ function Sidebar() {
               </ListItemButton>
             </ListItem>
             <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
-              <ListItemButton component={Link} to="/registerLoan">
+              {/* <ListItemButton component={Link} to="/registerLoan"> */}
+              <ListItemButton component={Link} to="/editLoanInformation">
                 <ListItemIcon
                   sx={{
                     color: "white",

@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  Grid2,
-  Tabs,
-  Tab,
-  Box,
-  Typography,
-  Button,
-  Modal,
-  TextField,
-} from "@mui/material";
+import { Grid2, Tabs, Tab, Box } from "@mui/material";
 import PropTypes from "prop-types";
 import LoanAmountCalculater from "./utils/LoanAmountCalculater";
 import SavingCalculater from "./utils/SavingCalculater";
@@ -52,26 +43,9 @@ function a11yProps(index) {
 const Calculater = () => {
   const [value, setValue] = useState(0);
 
-
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
-
-  const columns = [
-    { label: "Сар", accessor: "month", flex: 2 },
-    { label: "Огноо", accessor: "date", flex: 2 },
-    { label: "Хоног", accessor: "day", flex: 2 },
-    { label: "Үндсэн зээлийн төлбөр", accessor: "loanAmount", flex: 2 },
-    { label: "Хүүгийн төлбөр", accessor: "intAmount", flex: 2 },
-    { label: "Тэнцүү төлбөр", accessor: "combinedAmount", flex: 2 },
-    { label: "Үндсэн зээлийн үлдэгдэл", accessor: "loanBalance", flex: 2 },
-  ];
-
-  const data = [
-    { name: "Alice", age: 30, email: "alice@example.com" },
-    { name: "Bob", age: 25, email: "bob@example.com" },
-    { name: "Charlie", age: 35, email: "charlie@example.com" },
-  ];
 
   return (
     <div>

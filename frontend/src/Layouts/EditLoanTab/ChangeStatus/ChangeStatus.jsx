@@ -7,8 +7,8 @@ import {
   ListItemText,
   Switch,
 } from "@mui/material";
-import GetLoan from "../LoanInfo/api/GetLoan";
-import ChangeStatusApi from "../../api/ChangeStatus";
+import GetLoan from "../../LoanInfo/api/GetLoan";
+import ChangeStatusApi from "../../../api/ChangeStatus";
 
 const ChangeStatus = () => {
   const [loanData, setLoanData] = useState([]);

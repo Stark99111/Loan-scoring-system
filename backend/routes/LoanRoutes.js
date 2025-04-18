@@ -12,6 +12,29 @@ const SocialInsuranceModel = require("../models/SocialInsurance");
 router.get("/", async (req, res) => {
   try {
     const loans = await LoanModel.find();
+    const unlinkedRequirements = await RequirementModel.find({
+      _id: {
+        $nin: (
+          await LoanModel.find().select("requirements").lean()
+        ).flatMap((loan) => loan.requirements),
+      },
+    });
+    const deleteResult = await RequirementModel.deleteMany({
+      _id: { $in: unlinkedRequirements.map((req) => req._id) },
+    });
+
+    const unlinkedConditions = await ConditionModel.find({
+      _id: {
+        $nin: (
+          await LoanModel.find().select("conditions").lean()
+        ).flatMap((loan) => loan.conditions),
+      },
+    });
+
+    const deleteResultCon = await ConditionModel.deleteMany({
+      _id: { $in: unlinkedConditions.map((condition) => condition._id) },
+    });
+
     if (!loans.length) {
       return res.status(200).json({ message: "There are no loans" });
     }
@@ -44,10 +67,11 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Loan already exists" });
     }
 
-    let categories = [];
+    let categories = "";
     let conditions = [];
     let requirements = [];
-    let bankCategories = [];
+    let bankCategories = "";
+    let status = true;
 
     categories = await CategoryModel.find({
       CategoryCode: "67571dc27e3de1a6814437df",
@@ -58,10 +82,19 @@ router.post("/register", async (req, res) => {
     }
 
     if (bankCategoryNums) {
-      bankCategories = await CategoryModel.find({ CategoryCode: categoryNums });
+      bankCategories = await CategoryModel.findOne({
+        CategoryCode: bankCategoryNums,
+      });
 
       if (!bankCategories) {
-        return res.status(404).json({ message: "Some categories not found" });
+        return res.status(404).json({ message: "Bank category not found" });
+      }
+    }
+
+    if (categoryNums) {
+      categories = await CategoryModel.findOne({ CategoryCode: categoryNums });
+      if (!categories) {
+        return res.status(404).json({ message: "Loan category not found" });
       }
     }
 
@@ -98,10 +131,12 @@ router.post("/register", async (req, res) => {
       name,
       image,
       description,
-      categories: categories.map((category) => category._id),
+      status,
+      loanCategories: categories,
       conditions: conditions.map((condition) => condition._id),
       requirements: requirements.map((requirement) => requirement._id),
-      bankCategories: bankCategories.map((bankCategory) => bankCategory._id),
+      bankCategories: bankCategories,
+      registeredDate: new Date(),
     });
 
     // Save new loan to the database
@@ -115,9 +150,126 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.put("/update/:id/:status", async (req, res) => {
+  try {
+    const {
+      name,
+      categoryNums,
+      bankCategoryNums,
+      reqDescriptions,
+      conDescriptions,
+      description,
+    } = req.body;
+
+    const { id, status } = req.params;
+
+    // Check for required fields
+    if (!name || !description || !categoryNums) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Find the existing loan by its ID
+    const existingLoan = await LoanModel.findById(id);
+    if (!existingLoan) {
+      return res.status(404).json({ message: "Loan not found" });
+    }
+
+    let categories = "";
+    let conditions = [];
+    let requirements = [];
+    let bankCategories = "";
+
+    // Update categories if necessary
+    if (categoryNums) {
+      categories = await CategoryModel.findOne({ CategoryCode: categoryNums });
+      if (!categories) {
+        return res.status(404).json({ message: "Loan category not found" });
+      }
+    }
+
+    // Update bank categories if provided
+    if (bankCategoryNums) {
+      bankCategories = await CategoryModel.findOne({
+        CategoryCode: bankCategoryNums,
+      });
+
+      if (!bankCategories) {
+        return res.status(404).json({ message: "Bank category not found" });
+      }
+    }
+
+    // Fetch conditions based on conDescriptions if they exist
+    if (Array.isArray(conDescriptions)) {
+      const values = conDescriptions.map((item) => item.value);
+      const conditionDescriptions = conDescriptions.map(
+        (item) => item.condition
+      );
+
+      conditions = await ConditionModel.find({
+        conditionName: { $in: values },
+        Description: { $in: conditionDescriptions },
+      });
+
+      if (conditions.length !== conDescriptions.length) {
+        return res.status(404).json({ message: "Some conditions not found" });
+      }
+    }
+
+    // Fetch requirements based on reqDescriptions if they exist
+    if (Array.isArray(reqDescriptions)) {
+      requirements = await RequirementModel.find({
+        requirementName: { $in: reqDescriptions },
+      });
+
+      if (requirements.length !== reqDescriptions.length) {
+        return res.status(404).json({ message: "Some requirements not found" });
+      }
+    }
+
+    // Update the loan object with new data
+    existingLoan.name = name || existingLoan.name;
+    existingLoan.description = description || existingLoan.description;
+    existingLoan.loanCategories = categories || existingLoan.loanCategories;
+    existingLoan.status = status;
+    existingLoan.conditions = conditions.length
+      ? conditions.map((condition) => condition._id)
+      : existingLoan.conditions;
+    existingLoan.requirements = requirements.length
+      ? requirements.map((requirement) => requirement._id)
+      : existingLoan.requirements;
+    existingLoan.bankCategories = bankCategories || existingLoan.bankCategories;
+    existingLoan.updatedDate = new Date(); // Set updated date
+
+    // Save the updated loan
+    const updatedLoan = await existingLoan.save();
+    return res.status(200).json(updatedLoan);
+  } catch (e) {
+    console.error("Error updating loan:", e); // Log error for debugging
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the loan" });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleteLoan = await LoanModel.findByIdAndDelete(id);
+
+    if (!deleteLoan) {
+      return res.status(404).json({ message: "Loan not found" });
+    }
+
+    return res.status(200).json({ message: "Successfully deleted" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post("/getById", async (req, res) => {
   try {
-    const { id } = req.body; // It's better to use req.query or req.params for GET requests
+    const { id } = req.body; 
     if (!id) {
       return res.status(400).json({ message: "ID is required" });
     }
@@ -127,7 +279,6 @@ router.post("/getById", async (req, res) => {
       return res.status(200).json({ message: "There are no loans" });
     }
 
-    // Collect requirements using a Promise.all to handle asynchronous operations
     const requirements = await Promise.all(
       loans.flatMap(
         (item) =>
@@ -172,7 +323,6 @@ router.post("/changeStatus", async (req, res) => {
       return res.status(200).json({ message: "There are no loan" });
     }
 
-    console.log("Loan status updated successfully:", updatedLoan);
     return res.json(updatedLoan);
   } catch (e) {
     res.status(500).json({ error: e.message });

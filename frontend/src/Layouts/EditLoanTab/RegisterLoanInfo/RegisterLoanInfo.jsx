@@ -9,33 +9,19 @@ import {
   Typography,
   Button,
 } from "@mui/material";
-import GetCategories from "../../api/GetCategories";
-import RegisterCondition from "../../api/RegisterCondition";
-import RegisterLoan from "../../api/RegisterLoan";
+import RegisterCondition from "../../../api/RegisterCondition";
+import RegisterLoan from "../../../api/RegisterLoan";
 import imageCompression from "browser-image-compression";
-import RegisterRequirement from "../../api/RegisterRequirement";
-import { Snackbar, Alert } from "@mui/material";
+import RegisterRequirement from "../../../api/RegisterRequirement";
 
-const RegisterLoanInfo = () => {
-  const [loanOptions, setLoanOptions] = useState([]);
+const RegisterLoanInfo = ({ handleClose, loanOptions, bankOptions }) => {
   const [loanImage, setLoanImage] = useState();
   const [fields, setFields] = useState([{ value: "", condition: "" }]);
   const [loanType, setLoanType] = useState();
+  const [bankType, setBankType] = useState();
   const [loanName, setLoanName] = useState();
   const [description, setDescription] = useState();
   const [requirements, setRequirements] = useState([""]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-  useEffect(() => {
-    GetCategories().then((data) => {
-      if (data) {
-        const LoanOptions = data.data.filter(
-          (item) => item.Description === "Банкны төрөл"
-        );
-        setLoanOptions(LoanOptions);
-      }
-    });
-  }, []);
 
   const imageOnChange = async (e) => {
     const file = e.target.files[0];
@@ -96,33 +82,23 @@ const RegisterLoanInfo = () => {
       const response = await RegisterLoan(
         loanName,
         loanType,
+        bankType,
         requirements,
         fields,
         loanImage,
         description
       );
-      if (response.status === 200) {
-        setSnackbarOpen(true); // Show snackbar
-        // Reset all fields
-        setLoanName("");
-        setLoanType("");
-        setRequirements([""]);
-        setFields([{ value: "", condition: "" }]);
-        setLoanImage(null);
-        setDescription("");
+      if (response) {
+        // Show snackbar
+        handleClose();
       }
     }, 1000);
   };
 
   return (
     <div>
-      <Grid2 container bgcolor={"white"} borderRadius={4} p={3} gap={3}>
-        <Grid2 size={12}>
-          <Typography fontWeight={"bold"} fontSize={23} p={2}>
-            Зээлийн мэдээлэл бүртгэх
-          </Typography>
-        </Grid2>
-        <Grid2 size={2}>
+      <Grid2 container gap={3} display={"flex"} justifyContent={"space-around"}>
+        <Grid2 size={5.8}>
           <FormControl fullWidth size="small">
             <InputLabel id="loan-type-label">Банкны төрөл</InputLabel>
             <Select
@@ -130,10 +106,10 @@ const RegisterLoanInfo = () => {
               defaultValue=""
               label={"Банкны төрөл"}
               size="small"
-              value={loanType}
-              onChange={(e) => setLoanType(e.target.value)}
+              value={bankType}
+              onChange={(e) => setBankType(e.target.value)}
             >
-              {loanOptions.map((item) => (
+              {bankOptions?.map((item) => (
                 <MenuItem key={item.CategoryCode} value={item.CategoryCode}>
                   {item.CategoryName}
                 </MenuItem>
@@ -141,7 +117,26 @@ const RegisterLoanInfo = () => {
             </Select>
           </FormControl>
         </Grid2>
-        <Grid2 size={4}>
+        <Grid2 size={5.8}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="loan-type-label">Зээлийн төрөл</InputLabel>
+            <Select
+              labelId="loan-type-label"
+              defaultValue=""
+              label={"Зээлийн төрөл"}
+              size="small"
+              value={loanType}
+              onChange={(e) => setLoanType(e.target.value)}
+            >
+              {loanOptions?.map((item) => (
+                <MenuItem key={item.CategoryCode} value={item.CategoryCode}>
+                  {item.CategoryName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid2>
+        <Grid2 size={5.8}>
           <TextField
             variant="outlined"
             label="Зээлийн нэр"
@@ -151,8 +146,7 @@ const RegisterLoanInfo = () => {
             onChange={(e) => setLoanName(e.target.value)}
           />
         </Grid2>
-        <Grid2 size={4}></Grid2>
-        <Grid2 size={6.16}>
+        <Grid2 size={5.8}>
           <TextField
             type="file"
             label="Зураг"
@@ -165,7 +159,7 @@ const RegisterLoanInfo = () => {
             onChange={imageOnChange}
           />
         </Grid2>
-        <Grid2 size={6.16}>
+        <Grid2 size={12}>
           <TextField
             multiline
             label="Тайлбар"
@@ -184,7 +178,7 @@ const RegisterLoanInfo = () => {
         </Grid2>
         {fields.map((field, index) => (
           <React.Fragment key={index}>
-            <Grid2 size={3}>
+            <Grid2 size={4.6}>
               <TextField
                 variant="outlined"
                 label="Утга"
@@ -206,6 +200,7 @@ const RegisterLoanInfo = () => {
             </Grid2>
           </React.Fragment>
         ))}
+        <Grid2 size={10}></Grid2>
         <Grid2 size={1.6}>
           <Button
             variant="contained"
@@ -227,7 +222,7 @@ const RegisterLoanInfo = () => {
           </Typography>
         </Grid2>
         {requirements.map((requirement, index) => (
-          <Grid2 size={10.15} key={index}>
+          <Grid2 size={12} key={index}>
             <TextField
               variant="outlined"
               label={`Шаардлага `}
@@ -238,6 +233,7 @@ const RegisterLoanInfo = () => {
             />
           </Grid2>
         ))}
+        <Grid2 size={10}></Grid2>
         <Grid2 size={1.6}>
           <Button
             variant="contained"
@@ -253,7 +249,7 @@ const RegisterLoanInfo = () => {
             Нэмэх
           </Button>
         </Grid2>
-        <Grid2 size={12} height={20}></Grid2>
+
         <Grid2 size={12} display={"flex"} justifyContent={"flex-end"}>
           <Button
             variant="contained"
@@ -267,20 +263,6 @@ const RegisterLoanInfo = () => {
           >
             Зээл бүртгэх
           </Button>
-          <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={3000}
-            onClose={() => setSnackbarOpen(false)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          >
-            <Alert
-              onClose={() => setSnackbarOpen(false)}
-              severity="success"
-              sx={{ width: "100%" }}
-            >
-              Амжилттай хадгалагдлаа
-            </Alert>
-          </Snackbar>
         </Grid2>
       </Grid2>
     </div>

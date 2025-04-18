@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Grid2, Typography, Button, TextField } from "@mui/material";
+import { Grid2, Button, TextField } from "@mui/material";
 import CustomDataGrid from "../../../Components/CustomDataGrid";
 
 const LoanAmountCalculater = () => {

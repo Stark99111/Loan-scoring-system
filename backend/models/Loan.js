@@ -35,6 +35,12 @@ const LoanSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "category",
   },
+  registeredDate: {
+    type: mongoose.Schema.Types.Date,
+  },
+  updatedDate: {
+    type: mongoose.Schema.Types.Date,
+  },
 });
 
 const LoanModel = mongoose.model("loan", LoanSchema);

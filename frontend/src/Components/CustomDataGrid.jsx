@@ -36,13 +36,15 @@ const CustomDataGrid = ({ columns, data }) => {
     <table className="custom-datagrid">
       <thead>
         <tr>
-          {columns.map((col) => (
+          {columns?.map((col) => (
             <th
               key={col.accessor}
               onClick={() => handleSort(col.accessor)}
               style={{
                 width: `${((col.flex || 1) / totalFlex) * 100}%`,
                 backgroundColor: "#dddee0",
+                textAlign: col.headerAlign || "left",
+                cursor: "pointer",
               }}
             >
               {col.label}
@@ -53,7 +55,7 @@ const CustomDataGrid = ({ columns, data }) => {
         </tr>
       </thead>
       <tbody>
-        {sortedData.map((row, idx) => (
+        {sortedData?.map((row, idx) => (
           <tr key={idx}>
             {columns.map((col) => (
               <td
@@ -61,10 +63,12 @@ const CustomDataGrid = ({ columns, data }) => {
                 style={{
                   height: "30px",
                   width: `${((col.flex || 1) / totalFlex) * 100}%`,
-                  borderBottom: "0px solid white",
+                  textAlign: col.contentAlign || "left",
                 }}
               >
-                {col.numberFormat
+                {col.renderCell
+                  ? col.renderCell(row)
+                  : col.numberFormat
                   ? formatNumber(row[col.accessor])
                   : row[col.accessor]}
               </td>

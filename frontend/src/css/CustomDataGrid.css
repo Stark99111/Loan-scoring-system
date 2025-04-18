@@ -1,17 +1,80 @@
 .custom-datagrid {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .custom-datagrid th,
-  .custom-datagrid td {
-    padding: 10px;
-    border: 1px solid #ccc;
-    text-align: left;
-  }
-  
-  .custom-datagrid th {
-    background-color: #f5f5f5;
-    cursor: pointer;
-  }
-  
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 8px; /* ⬅ Rounded corners */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.custom-datagrid th,
+.custom-datagrid td {
+  padding: 10px;
+  border: 1px solid rgba(151, 147, 147, 0.1);
+  text-align: left;
+}
+
+.custom-datagrid th {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+.custom-datagrid thead th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.custom-datagrid thead th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.custom-datagrid tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.custom-datagrid tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.custom-datagrid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.custom-datagrid thead th,
+.custom-datagrid tbody td {
+  border-right: 1px solid transparent; /* prevents double borders */
+}
+
+/* Remove right borders for all cells except the last column */
+.custom-datagrid thead th:not(:last-child),
+.custom-datagrid tbody td:not(:last-child) {
+  border-right: none;
+}
+
+/* Optional: styling for row separation (if needed) */
+.custom-datagrid tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+/* Rounded corners */
+.custom-datagrid thead th:first-child {
+  border-top-left-radius: 8px;
+}
+.custom-datagrid thead th:last-child {
+  border-top-right-radius: 8px;
+}
+.custom-datagrid tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+.custom-datagrid tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+/* Add border-bottom for row separation */
+.custom-datagrid td {
+  border-bottom: 1px solid #c7c5c5;
+}
