@@ -125,14 +125,14 @@ const RegisterLoan = () => {
     <>
       <Grid2
         container
-        gap={2}
+        gap={3}
         justifyContent={"space-around"}
         bgcolor={"white"}
         borderRadius={4}
-        p={2}
+        p={3}
       >
         <Grid2 size={12}>
-          <Typography fontWeight={"bold"} fontSize={23} p={2}>
+          <Typography fontWeight={"bold"} fontSize={23} pt={2} pl={3}>
             Зээл бүртгэх
           </Typography>
         </Grid2>
@@ -552,7 +552,7 @@ const RegisterLoan = () => {
                         ? new Date(creditDatabase.paidDate)
                             .toISOString()
                             .split("T")[0]
-                        : "N/A"}
+                        : "-"}
                     </td>
                     <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                       {creditDatabase.loanInstitution}

@@ -7,7 +7,7 @@ const modalContainerStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  bgcolor: "#dddfe3",
+  bgcolor: "white",
   boxShadow: 24,
   p: 4,
   borderRadius: 3,
@@ -28,12 +28,18 @@ const CustomModal = ({ open, onClose, title, children }) => {
     <Modal open={open} onClose={onClose}>
       <Box sx={modalContainerStyle}>
         <Box sx={headerStyle}>
-          <Typography sx={{ fontSize: 23, fontWeight: "bold" }}>
-            {title}
-          </Typography>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
+          {title ? (
+            <>
+              <Typography sx={{ fontSize: 23, fontWeight: "bold" }}>
+                {title}
+              </Typography>
+              <IconButton onClick={onClose}>
+                <CloseIcon />
+              </IconButton>
+            </>
+          ) : (
+            <></>
+          )}
         </Box>
         {children}
       </Box>

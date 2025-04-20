@@ -38,7 +38,7 @@ const LoanDetailsModal = ({ id, style }) => {
     <Grid2
       container
       sx={{ width: 900 }}
-      pt={3}
+      // pt={3}
       height={"auto"}
       display="flex"
       justifyContent="space-between"

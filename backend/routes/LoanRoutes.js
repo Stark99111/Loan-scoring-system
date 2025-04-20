@@ -56,12 +56,10 @@ router.post("/register", async (req, res) => {
       description,
     } = req.body;
 
-    // Check for required fields
     if (!name || !description || !categoryNums) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check if the loan already exists
     const existingLoan = await LoanModel.findOne({ name });
     if (existingLoan) {
       return res.status(400).json({ message: "Loan already exists" });
@@ -98,7 +96,6 @@ router.post("/register", async (req, res) => {
       }
     }
 
-    // Fetch conditions based on conDescriptions
     if (Array.isArray(conDescriptions)) {
       const values = conDescriptions.map((item) => item.value);
       const conditionDescriptions = conDescriptions.map(
@@ -115,7 +112,6 @@ router.post("/register", async (req, res) => {
       }
     }
 
-    // Fetch requirements based on reqDescriptions
     if (Array.isArray(reqDescriptions)) {
       requirements = await RequirementModel.find({
         requirementName: { $in: reqDescriptions },
@@ -126,7 +122,6 @@ router.post("/register", async (req, res) => {
       }
     }
 
-    // Create new loan
     const newLoan = new LoanModel({
       name,
       image,
@@ -139,11 +134,10 @@ router.post("/register", async (req, res) => {
       registeredDate: new Date(),
     });
 
-    // Save new loan to the database
     const savedLoan = await newLoan.save();
     return res.status(200).json(savedLoan);
   } catch (e) {
-    console.error("Error registering loan:", e); // Log error for debugging
+    console.error("Error registering loan:", e); 
     res
       .status(500)
       .json({ error: "An error occurred while registering the loan" });

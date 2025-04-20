@@ -221,14 +221,6 @@ const EditLoanInformation = () => {
 
   return (
     <div>
-      <Grid2 container2>
-        <Grid2 size={12}>
-          <Typography fontWeight={"bold"} fontSize={23} p={2}>
-            Зээлийн мэдээлэл засах
-          </Typography>
-        </Grid2>
-      </Grid2>
-
       <Grid2
         container
         bgcolor={"white"}
@@ -237,7 +229,12 @@ const EditLoanInformation = () => {
         gap={3}
         border={"1px solid #ccd0d9"}
       >
-        <Grid2 size={2}>
+        <Grid2 size={12}>
+          <Typography fontWeight={"bold"} fontSize={23} pt={2} pl={3}>
+            Зээлийн мэдээлэл засах
+          </Typography>
+        </Grid2>
+        <Grid2 size={1.6}>
           <Button
             sx={{
               fontWeight: "bold",

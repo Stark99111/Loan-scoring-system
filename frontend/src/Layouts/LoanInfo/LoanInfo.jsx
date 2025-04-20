@@ -11,6 +11,7 @@ import {
 import PropTypes from "prop-types";
 import GetLoan from "./api/GetLoan";
 import LoanDetailsModal from "./modal/LoanMainInfo";
+import CustomModal from "../../Components/CustomModal";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -28,16 +29,16 @@ function CustomTabPanel(props) {
   );
 }
 const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 800,
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  pt: 2,
-  px: 4,
-  pb: 3,
+  // position: "absolute",
+  // top: "50%",
+  // left: "50%",
+  // transform: "translate(-50%, -50%)",
+  // // width: 800,
+  // bgcolor: "background.paper",
+  // boxShadow: 24,
+  // pt: 2,
+  // px: 4,
+  // pb: 3,
 };
 
 CustomTabPanel.propTypes = {
@@ -186,7 +187,7 @@ const LoanInfo = () => {
         borderRadius={2}
         p={3}
       >
-        <Grid2 size={8}>
+        <Grid2 size={12} display="flex" justifyContent="center">
           <Tabs
             value={value}
             onChange={handleChange}
@@ -232,16 +233,11 @@ const LoanInfo = () => {
           {renderTabContent("67571dd07e3de1a6814437e2")}
         </CustomTabPanel>
         <Grid2 size={12}>
-          <Modal
-            open={loanModal}
-            onClose={handleClose}
-            aria-labelledby="parent-modal-title"
-            aria-describedby="parent-modal-description"
-          >
-            <Box sx={{ ...style, width: 900, borderRadius: 3 }}>
-              <LoanDetailsModal id={id} style={style} />
+          <CustomModal open={loanModal} onClose={handleClose}>
+            <Box sx={{ width: 900, borderRadius: 3 }}>
+              <LoanDetailsModal id={id} />
             </Box>
-          </Modal>
+          </CustomModal>
         </Grid2>
       </Grid2>
     </>

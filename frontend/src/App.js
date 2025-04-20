@@ -14,6 +14,7 @@ import LoanAmountCalculater from "./Layouts/Calculater/Calculater.jsx";
 import Default from "./Layouts/Default/Default.jsx";
 import Footer from "./Layouts/Footer/Footer.jsx";
 import EditLoanInformation from "./Layouts/EditLoanInformation/EditLoanInformation.jsx";
+import CalculateScoring from "./Layouts/ScoringTab/CalculateScoring/CalculateScoring.jsx";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,6 +69,10 @@ const App = () => {
                 <Route
                   path="/loanAmountCalculater"
                   element={<LoanAmountCalculater />}
+                />
+                <Route
+                  path="/calculateScoring"
+                  element={<CalculateScoring />}
                 />
               </Routes>
             </Box>

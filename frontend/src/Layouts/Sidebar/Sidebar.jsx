@@ -21,14 +21,13 @@ import { Link } from "react-router-dom";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import PolicyIcon from "@mui/icons-material/Policy";
 import ArticleIcon from "@mui/icons-material/Article";
-import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import PlagiarismIcon from "@mui/icons-material/Plagiarism";
 import ContentPasteIcon from "@mui/icons-material/ContentPaste";
-import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
+import CreditScoreIcon from "@mui/icons-material/CreditScore";
 
 function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const roleId = localStorage.getItem("role");
+  // const roleId = localStorage.getItem("role");
   const user = JSON.parse(localStorage.getItem("user"));
   console.log(user);
 
@@ -46,12 +45,12 @@ function Sidebar() {
     <Drawer
       variant="permanent"
       sx={{
-        width: isSidebarOpen ? 280 : 60,
+        width: isSidebarOpen ? 260 : 60,
         flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         "& .MuiDrawer-paper": {
-          width: isSidebarOpen ? 280 : 60,
+          width: isSidebarOpen ? 260 : 60,
           boxSizing: "border-box",
           transition: "width 0.3s ease",
           backgroundColor: "#1a1c1d",
@@ -80,7 +79,7 @@ function Sidebar() {
           paddingBottom: 3,
           display: "flex",
           justifyContent: "center",
-          height: isSidebarOpen ? 110 : 80,
+          height: isSidebarOpen ? 90 : 60,
           overflow: "hidden",
         }}
       >
@@ -107,7 +106,7 @@ function Sidebar() {
       )}
       <Box sx={{ flexGrow: 1 }}>
         <Box paddingLeft={3}>
-          <Typography color="white" fontSize={24}>
+          <Typography color="white" fontSize={22}>
             {isSidebarOpen ? "Зээл" : "-"}
           </Typography>
         </Box>
@@ -123,7 +122,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээлийн мэдээлэл"}
@@ -143,7 +142,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээл бүртгэх"}
@@ -166,7 +165,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээлийн мэдээлэл засах"}
@@ -186,7 +185,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Тооцоолуур"}
@@ -206,7 +205,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээлийн эрсдэл"}
@@ -216,50 +215,33 @@ function Sidebar() {
           </List>
         </Box>
         <Box paddingLeft={3}>
-          <Typography color="white" fontSize={24}>
+          <Typography color="white" fontSize={22}>
             {isSidebarOpen ? "Скоринг" : "-"}
           </Typography>
         </Box>
         <Box sx={{ width: 280 }} role="presentation">
           <List>
             <ListItem key={"Тооцоолуур"} disablePadding>
-              <ListItemButton component={Link} to="/loanAmountCalculater">
+              <ListItemButton component={Link} to="/calculateScoring">
                 <ListItemIcon
                   sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
                 >
-                  <RequestQuoteIcon />
+                  <CreditScoreIcon />
                 </ListItemIcon>
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
-                  primary={"Тооцоолуур"}
-                />
-              </ListItemButton>
-            </ListItem>
-            <ListItem key={"Дэлгэрэнгүй"} disablePadding>
-              <ListItemButton component={Link} to="/procedureReport">
-                <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
-                >
-                  <StickyNote2Icon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 16,
-                    color: "white",
-                  }}
-                  primary={"Дэлгэрэнгүй"}
+                  primary={"Зэрэглэл"}
                 />
               </ListItemButton>
             </ListItem>
           </List>
         </Box>
         <Box paddingLeft={3}>
-          <Typography color="white" fontSize={24}>
+          <Typography color="white" fontSize={22}>
             {isSidebarOpen ? "Тайлан" : "-"}
           </Typography>
         </Box>
@@ -276,7 +258,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээлийн журам"}
@@ -294,7 +276,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Зээлийн эрэлтийн тайлан"}
@@ -312,7 +294,7 @@ function Sidebar() {
                 <ListItemText
                   sx={{ color: "white" }}
                   primaryTypographyProps={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "white",
                   }}
                   primary={"Журмын биелэлтийн тайлан"}
@@ -333,7 +315,7 @@ function Sidebar() {
           opacity: isSidebarOpen ? 1 : 0,
         }}
       >
-        <Typography color="white" fontSize={18}>
+        <Typography color="white" fontSize={16}>
           {isSidebarOpen ? user?.firstname + " - " + user?.domain : "-"}
         </Typography>
       </Box>
@@ -350,7 +332,7 @@ function Sidebar() {
               <ListItemText
                 sx={{ color: "white" }}
                 primaryTypographyProps={{
-                  fontSize: 16,
+                  fontSize: 14,
                   color: "white",
                 }}
                 primary="Log out"
