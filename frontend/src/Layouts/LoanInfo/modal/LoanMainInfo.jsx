@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Tab, Tabs, Grid2 } from "@mui/material";
+import { Box, Typography, Tab, Tabs, Grid2, Button } from "@mui/material";
 import GetLoanDataById from "../../../api/GetLoanDataById";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Divider from "@mui/material/Divider";
 
-const LoanDetailsModal = ({ id, style }) => {
+const LoanDetailsModal = ({ id, style, onClose }) => {
   const [loan, setLoan] = useState();
   const [req, setReq] = useState([]);
   const [con, setCon] = useState([]);
@@ -141,7 +141,7 @@ const LoanDetailsModal = ({ id, style }) => {
                     {item.conditionName}
                   </Typography>
                 </Grid2>
-                <Grid2 size={6} p={1} paddingRight={8} spacing={2}>
+                <Grid2 size={6} p={1} paddingRight={5} spacing={2}>
                   <Typography
                     key={index}
                     sx={{
@@ -152,7 +152,7 @@ const LoanDetailsModal = ({ id, style }) => {
                     {item.Description}
                   </Typography>
                 </Grid2>
-                <Grid2 size={12} paddingRight={9}>
+                <Grid2 size={12} paddingRight={6}>
                   <Divider />
                 </Grid2>
               </>
@@ -169,9 +169,9 @@ const LoanDetailsModal = ({ id, style }) => {
           {req.length > 0 ? (
             req.map((item, index) => (
               <>
-                <Grid2 size={12} paddingRight={9}>
+                {/* <Grid2 size={12} paddingRight={9}>
                   <Divider />
-                </Grid2>
+                </Grid2> */}
                 <Grid2
                   size={12}
                   p={1}
@@ -203,6 +203,15 @@ const LoanDetailsModal = ({ id, style }) => {
           )}
         </>
       )}
+      <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
+        <Button
+          variant={"contained"}
+          sx={{ fontWeight: "bold", height: "35px", bgcolor: "#05357E" }}
+          onClick={onClose}
+        >
+          Хүсэлт үүсгэх
+        </Button>
+      </Grid2>
     </Grid2>
   );
 };

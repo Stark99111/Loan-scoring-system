@@ -1,38 +1,17 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const CustomerSchema = new mongoose.Schema({
-  ovog: {
+  idNumber: {
     type: String,
-    required: true,
-  },
-  ner: {
-    type: String,
-    required: true,
-  },
-  urgiinOvog: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
   },
   phone: {
     type: String,
     required: true,
   },
-  sex: {
+  password: {
     type: String,
-  },
-  bornDate: {
-    type: Date,
-  },
-  idNumber: {
-    type: String,
-  },
-  nation: {
-    type: String,
+    required: true,
   },
   createdAt: {
     type: Date,
@@ -42,16 +21,40 @@ const CustomerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CustomerAddress",
   },
-  CreditDatabase: {
+  Scoring: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "CreditDatabase",
+    ref: "Scoring",
   },
+  CreditDatabase: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CreditDatabase",
+    },
+  ],
   SocialInsurance: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SocialInsurance",
     },
   ],
+  CustomerMainInformation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CustomerMainInformation",
+  },
+  LoanInstitutionRequestHistory: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoanInstitution",
+    },
+  ],
+});
+
+CustomerSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
 });
 
 const CustomerModel = mongoose.model("Customer", CustomerSchema);

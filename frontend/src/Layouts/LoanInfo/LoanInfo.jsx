@@ -12,6 +12,7 @@ import PropTypes from "prop-types";
 import GetLoan from "./api/GetLoan";
 import LoanDetailsModal from "./modal/LoanMainInfo";
 import CustomModal from "../../Components/CustomModal";
+import LoanRiskCalculater from "./modal/LoanRiskCalculater";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -59,6 +60,7 @@ const LoanInfo = () => {
   const [loanData, setLoanData] = useState([]);
   const [loanModal, setLoanModal] = useState(false);
   const [id, setId] = useState();
+  const [loanRiskModal, setLoanRIskModal] = useState(false);
 
   const handleOpen = (id) => {
     setId(id);
@@ -86,11 +88,23 @@ const LoanInfo = () => {
       });
   }, []);
 
+  const handleCloseModal = () => {
+    setLoanModal(false);
+    setLoanRIskModal(true);
+  };
+
+  const handleBack = () => {
+    setLoanModal(true);
+    setLoanRIskModal(false);
+  };
+
   const renderTabContent = (filterCategoryId) => {
+    console.log(loanData);
+    console.log(filterCategoryId);
     const filteredData = filterCategoryId
       ? loanData.filter(
           (item) =>
-            item?.categories === filterCategoryId && item?.status === true
+            item?.bankCategories === filterCategoryId && item?.status === true
         )
       : loanData.filter((item) => item?.status === true);
 
@@ -102,10 +116,13 @@ const LoanInfo = () => {
             size={5}
             height={"auto"}
             container
-            bgcolor={"#dddfe0"}
+            // bgcolor={"#dddfe0"}
             borderRadius={4}
             display="flex"
             justifyContent="space-between"
+            sx={{
+              boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.5)",
+            }}
           >
             <Grid2 size={4} pl={4} pt={4}>
               <img
@@ -206,11 +223,10 @@ const LoanInfo = () => {
             }}
           >
             <Tab label="Бүгд" {...a11yProps(0)} />
-            <Tab label="Дижитал зээл" {...a11yProps(1)} />
-            <Tab label="Ногоон зээл" {...a11yProps(2)} />
-            <Tab label="Орон сууцны зээл" {...a11yProps(3)} />
-            <Tab label="Хэрэглээний зээл" {...a11yProps(4)} />
-            <Tab label="Бизнесийн зээл" {...a11yProps(5)} />
+            <Tab label="Хаан банк" {...a11yProps(1)} />
+            <Tab label="Голомт банк" {...a11yProps(2)} />
+            <Tab label="Худалдаа хөгжлийн банк" {...a11yProps(3)} />
+            <Tab label="Хас банк" {...a11yProps(4)} />
           </Tabs>
         </Grid2>
 
@@ -218,24 +234,33 @@ const LoanInfo = () => {
           {renderTabContent(null)}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
-          {renderTabContent("67571d947e3de1a6814437d6")}
+          {renderTabContent("67ff936badca6cbc0e9aa14b")}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
-          {renderTabContent("67571da87e3de1a6814437d9")}
+          {renderTabContent("67ff9379adca6cbc0e9aa14e")}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={3}>
-          {renderTabContent("67571db67e3de1a6814437dc")}
+          {renderTabContent("67ff9388adca6cbc0e9aa154")}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={4}>
-          {renderTabContent("67571dc27e3de1a6814437df")}
+          {renderTabContent("67ff937eadca6cbc0e9aa151")}
         </CustomTabPanel>
-        <CustomTabPanel value={value} index={5}>
-          {renderTabContent("67571dd07e3de1a6814437e2")}
-        </CustomTabPanel>
+        {/* <CustomTabPanel value={value} index={5}>
+          {renderTabContent("67ff9390adca6cbc0e9aa157")}
+        </CustomTabPanel> */}
         <Grid2 size={12}>
           <CustomModal open={loanModal} onClose={handleClose}>
             <Box sx={{ width: 900, borderRadius: 3 }}>
-              <LoanDetailsModal id={id} />
+              <LoanDetailsModal id={id} onClose={handleCloseModal} />
+            </Box>
+          </CustomModal>
+          <CustomModal
+            open={loanRiskModal}
+            onClose={() => setLoanRIskModal(false)}
+            title={" Зээлийн эрсдэл"}
+          >
+            <Box sx={{ width: 600, borderRadius: 3 }}>
+              <LoanRiskCalculater id={id} handleBack={handleBack} />
             </Box>
           </CustomModal>
         </Grid2>

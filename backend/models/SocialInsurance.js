@@ -10,6 +10,12 @@ const SocialInsuranceSchema = new mongoose.Schema({
   paidDate: {
     type: Date,
   },
+  salaryAmount: {
+    type: Number,
+  },
+  instituteCode: {
+    type: Number,
+  },
 });
 
 const SocialInsuranceModel = mongoose.model(

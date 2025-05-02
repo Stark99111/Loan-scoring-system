@@ -21,7 +21,7 @@ const LoanAmountCalculater = () => {
     },
     { label: "Хүүгийн төлбөр", accessor: "intAmount", flex: 2 },
     {
-      label: "Тэнцүү төлбөр",
+      label: "Нийт төлбөр",
       accessor: "combinedAmount",
       flex: 2,
       numberFormat: true,

@@ -2,11 +2,14 @@ import React, { useState, useMemo } from "react";
 import "../css/CustomDataGrid.css";
 
 const CustomDataGrid = ({ columns, data }) => {
-  const [sortConfig, setSortConfig] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
 
   const sortedData = useMemo(() => {
-    if (!sortConfig) return data;
+    if (!sortConfig || !sortConfig.key) return data;
     const { key, direction } = sortConfig;
+
+    if (!data[0] || !(key in data[0])) return data;
+
     return [...data].sort((a, b) => {
       if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
       if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
@@ -16,7 +19,7 @@ const CustomDataGrid = ({ columns, data }) => {
 
   const handleSort = (key) => {
     setSortConfig((prev) => {
-      if (prev?.key === key) {
+      if (prev.key === key) {
         return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       return { key, direction: "asc" };
@@ -39,7 +42,7 @@ const CustomDataGrid = ({ columns, data }) => {
           {columns?.map((col) => (
             <th
               key={col.accessor}
-              onClick={() => handleSort(col.accessor)}
+              onClick={() => col.sortable !== false && handleSort(col.accessor)}
               style={{
                 width: `${((col.flex || 1) / totalFlex) * 100}%`,
                 backgroundColor: "#dddee0",
@@ -61,12 +64,15 @@ const CustomDataGrid = ({ columns, data }) => {
               <td
                 key={col.accessor}
                 style={{
-                  height: "30px",
+                  height: "40px",
                   width: `${((col.flex || 1) / totalFlex) * 100}%`,
                   textAlign: col.contentAlign || "left",
                 }}
               >
-                {col.renderCell
+                {/* Add index column */}
+                {col.accessor === "number"
+                  ? idx + 1
+                  : col.renderCell
                   ? col.renderCell(row)
                   : col.numberFormat
                   ? formatNumber(row[col.accessor])

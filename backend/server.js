@@ -4,14 +4,13 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const fs = require("fs");
 
-const branchRoutes = require("./routes/BranchRoutes");
-const roleRoutes = require("./routes/RoleRoutes");
 const employeeRoutes = require("./routes/EmployeeRoutes");
 const loanRoutes = require("./routes/LoanRoutes");
 const conditionRoutes = require("./routes/ConditionRoutes");
 const categoryRoutes = require("./routes/CategoryRoutes");
 const requirementRoutes = require("./routes/RequirementRoutes");
 const customerRoutes = require("./routes/CustomerRoutes");
+const directoryRoutes = require("./routes/DirectoryRoutes");
 
 const app = express();
 
@@ -32,14 +31,13 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
-app.use("/branch", branchRoutes);
-app.use("/role", roleRoutes);
 app.use("/employee", employeeRoutes);
 app.use("/loan", loanRoutes);
 app.use("/condition", conditionRoutes);
 app.use("/category", categoryRoutes);
 app.use("/requirement", requirementRoutes);
 app.use("/customer", customerRoutes);
+app.use("/directory", directoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

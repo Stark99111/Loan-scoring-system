@@ -15,6 +15,7 @@ import Default from "./Layouts/Default/Default.jsx";
 import Footer from "./Layouts/Footer/Footer.jsx";
 import EditLoanInformation from "./Layouts/EditLoanInformation/EditLoanInformation.jsx";
 import CalculateScoring from "./Layouts/ScoringTab/CalculateScoring/CalculateScoring.jsx";
+import Register from "./Layouts/Register/index.jsx";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -76,7 +77,7 @@ const App = () => {
                 />
               </Routes>
             </Box>
-            <Box sx={{ p: 2, pt: 0 }}>
+            <Box sx={{ p: 0, pt: 0 }}>
               <Footer />
             </Box>
           </Box>
@@ -84,6 +85,7 @@ const App = () => {
       ) : (
         <Routes>
           <Route path="/*" element={<Login />} />
+          <Route path="/signUp" element={<Register />} />
         </Routes>
       )}
     </BrowserRouter>

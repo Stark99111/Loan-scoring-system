@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -11,10 +11,17 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import BigImage from "../../../Assets/logo.png";
 import Login from "../api/login";
+import { useNavigate } from "react-router-dom";
 
 const Form = () => {
+  const navigate = useNavigate();
   const [formMessage, setFormMessage] = useState("");
   const [formErrorMessage, setFormErrorMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    console.log(isAdmin);
+  }, [isAdmin]);
 
   const [domain, setDomain] = useState(null);
   const [password, setPassword] = useState(null);
@@ -25,10 +32,9 @@ const Form = () => {
   } = useForm();
 
   const onSubmit = (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-    console.log("Login Data:", { domain, password });
-    Login(domain, password).then((item) => {
-      if (item?.status === 200) {
+    e.preventDefault();
+    Login(domain, password, isAdmin).then((res) => {
+      if (res === 200) {
         setFormMessage("Login successful!");
         window.location.reload();
       } else {
@@ -73,7 +79,7 @@ const Form = () => {
           textAlign={"center"}
           fontWeight={"540"}
         >
-          Зээлийн журмын биелэлтийн систем
+          Зээлжих зэрэглэлийн оноо тооцоолох систем
         </Typography>
         <Box
           component="form"
@@ -98,7 +104,7 @@ const Form = () => {
                 margin="normal"
                 required
                 fullWidth
-                label="Домэйн"
+                label={isAdmin ? "Домэйн" : "Утасны дугаар"}
                 type="email"
                 autoComplete="email"
                 error={!!errors.email}
@@ -142,6 +148,19 @@ const Form = () => {
             }}
           >
             Нэвтрэх
+          </Button>
+          <Button
+            sx={{ fontWeight: "bold" }}
+            onClick={() => setIsAdmin(!isAdmin)}
+          >
+            {isAdmin ? "Хэрэглэгч" : "Админ"}-р нэвтрэх
+          </Button>
+
+          <Button
+            sx={{ fontWeight: "bold", ml: isAdmin ? 6 : 10 }}
+            onClick={() => navigate("/signUp")}
+          >
+            Бүртгүүлэх
           </Button>
         </Box>
         {formMessage && (

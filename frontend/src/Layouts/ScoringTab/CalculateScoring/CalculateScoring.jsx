@@ -7,24 +7,281 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { Pie } from "react-chartjs-2";
+import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import CustomModal from "../../../Components/CustomModal";
 import CustomerMainInformation from "./tabs/MainInformation";
+import axios from "axios";
+import CustomDataGrid from "../../../Components/CustomDataGrid";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ScoringAdvice from "./tabs/ScoringAdvice";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+const options = {
+  layout: {
+    padding: {
+      right: -30, // Shifts legend further left
+    },
+  },
+  plugins: {
+    legend: {
+      position: "left",
+      align: "center",
+      labels: {
+        boxWidth: 40,
+        padding: 10,
+      },
+    },
+  },
+};
+
 const CalculateScoring = () => {
-  const [isScoringCalculated, setIsScoringCalculated] = useState(false);
+  const [isScoringCalculated, setIsScoringCalculated] = useState(null);
   const [approveModal, setApproveModal] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [customerMainInfoModal, setCustomerMainInfoModal] = useState(false);
+  const [customerData, setCustomerData] = useState();
+  const [scoringData, setScoringData] = useState();
+  const userId = localStorage.getItem("userId");
+  const [data, setData] = useState();
+  const [scoringValue, setCategoryValue] = useState("");
+  const [scoringDesc, setScoringDesc] = useState();
+  const [scoringAdviceModal, setScoringAdvice] = useState(false);
+
+  const formatNumber = (value) => {
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const scoringCategory = [
+    {
+      maxAmount: 850,
+      lowAmount: 800,
+      text: "Маш сайн",
+      desc: "Зээл авахад хамгийн таатай нөхцөлтэй, бага хүүтэй зээл авах боломжтой.",
+    },
+    {
+      maxAmount: 799,
+      lowAmount: 740,
+      text: "Сайн",
+      desc: "Зээлийн нөхцөл таатай, ихэнх зээлийг батлах магадлал өндөр.",
+    },
+    {
+      maxAmount: 739,
+      lowAmount: 670,
+      text: "Дундаж",
+      desc: "Ихэнх зээлд хамрагдах боломжтой ч зарим тохиолдолд өндөр хүү санал болгож магадгүй.",
+    },
+    {
+      maxAmount: 669,
+      lowAmount: 580,
+      text: "Муу",
+      desc: "Зээлийн нөхцөл хатуу, өндөр хүүтэй байх магадлалтай. Батлан даалт шаардаж болзошгүй.",
+    },
+    {
+      maxAmount: 579,
+      lowAmount: 300,
+      text: "Маш муу",
+      desc: "Зээл авах магадлал маш бага, нэмэлт барьцаа, батлан даалт шаардана.",
+    },
+  ];
+
+  const scoringValueCol = [
+    {
+      label: "Хүчин зүйл",
+      accessor: "label",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "left",
+    },
+    {
+      label: "Оноо",
+      accessor: "value",
+      flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        return formatNumber(params.value);
+      },
+    },
+    {
+      label: "Дээд оноо",
+      accessor: "maxValue",
+      flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        return formatNumber(params.maxValue);
+      },
+    },
+  ];
+
+  const scoringValueColumn = [
+    {
+      label: "Онооны хүрээ",
+      accessor: "numberValues",
+      flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        return params.lowAmount + "-" + params.maxAmount;
+      },
+    },
+    {
+      label: "Зэрэглэл",
+      accessor: "text",
+      flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Тайлбар",
+      accessor: "desc",
+      flex: 4,
+      headerAlign: "center",
+      contentAlign: "justify",
+    },
+  ];
 
   useEffect(() => {
-    if (!isScoringCalculated) {
+    const fetchCustomerData = async () => {
+      const res = await axios.get(
+        `http://localhost:5000/Customer/getAllById/${userId}`
+      );
+      if (res.data) {
+        setCustomerData(res.data);
+        if (res.data.Scoring) {
+          setScoringData(res.data.Scoring);
+          setIsScoringCalculated(true);
+        } else {
+          setIsScoringCalculated(false);
+        }
+      }
+    };
+    if (userId) {
+      fetchCustomerData();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (isScoringCalculated === false) {
       setApproveModal(true);
     }
   }, [isScoringCalculated]);
+
+  useEffect(() => {
+    if (scoringData) {
+      const string = scoringCategory.find(
+        (item) =>
+          scoringData.scoring >= item.lowAmount &&
+          scoringData.scoring < item.maxAmount
+      )?.text;
+
+      if (string) {
+        setCategoryValue(string);
+      }
+
+      console.log(scoringData);
+      const maxLoanHistory = 10;
+      const maxDebt = 50000000;
+      const maxLoanLength = 60;
+      const maxNewRequests = 10;
+      const maxDTI = 2;
+
+      const loanHistory = scoringData.loanHistory;
+      const totalDebt = scoringData.availableLoanAmount;
+      const loanHistoryLength = scoringData.loanHistoryLength;
+      const newLoanRequests = scoringData.newLoanRequests;
+      const DTI = scoringData.DTI;
+
+      const normalized = {
+        loanHistory: Math.min(loanHistory / maxLoanHistory, 1),
+        availableLoanAmount: 1 - Math.min(totalDebt / maxDebt, 1),
+        loanHistoryLength: Math.min(loanHistoryLength / maxLoanLength, 1),
+        newLoanRequests: 1 - Math.min(newLoanRequests / maxNewRequests, 1),
+        DTI: 1 - Math.min(DTI / maxDTI, 1),
+      };
+
+      const weighted = {
+        loanHistory: normalized.loanHistory * 0.35,
+        availableLoanAmount: normalized.availableLoanAmount * 0.3,
+        loanHistoryLength: normalized.loanHistoryLength * 0.15,
+        newLoanRequests: normalized.newLoanRequests * 0.1,
+        DTI: normalized.DTI * 0.1,
+      };
+
+      const total = Object.values(weighted).reduce((sum, val) => sum + val, 0);
+
+      const pieData = Object.entries(weighted).map(([label, value]) => ({
+        name: label,
+        value: parseFloat(((value / total) * 100).toFixed(1)), // convert to %
+      }));
+
+      console.log(pieData);
+
+      if (pieData) {
+        const dataPie = {
+          labels: pieData.map((item) => {
+            const translations = {
+              loanHistory: "Зээлийн түүх",
+              availableLoanAmount: "Одоогийн өрийн хэмжээ",
+              loanHistoryLength: "Зээлийн түүхийн урт",
+              newLoanRequests: "Шинэ зээлийн хүсэлт",
+              DTI: "Өр орлогын харьцаа",
+            };
+            return translations[item.name] || item.name;
+          }),
+          datasets: [
+            {
+              label: "FICO Components",
+              data: pieData.map((item) => item.value),
+              backgroundColor: [
+                "#0088FE",
+                "#00C49F",
+                "#FFBB28",
+                "#FF8042",
+                "#AA66CC",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        };
+
+        setData(dataPie);
+      }
+    }
+  }, [scoringData]);
+
+  useEffect(() => {
+    const translations = {
+      loanHistory: "Зээлийн түүх",
+      availableLoanAmount: "Одоогийн өрийн хэмжээ",
+      loanHistoryLength: "Зээлийн түүхийн урт",
+      newLoanRequests: "Шинэ зээлийн хүсэлт",
+      DTI: "Өр орлогын харьцаа",
+    };
+    const scores = {
+      loanHistory: 192.5,
+      availableLoanAmount: 165,
+      loanHistoryLength: 82.5,
+      newLoanRequests: 55,
+      DTI: 55,
+    };
+    if (scoringData) {
+      const mapped = Object.keys(translations).map((key) => ({
+        label: translations[key],
+        value: scoringData[key],
+        maxValue: scores[key],
+      }));
+
+      console.log(mapped);
+      setScoringDesc(mapped);
+    }
+  }, [scoringData]);
 
   const CalculateScoringData = () => {
     return (
@@ -88,169 +345,167 @@ const CalculateScoring = () => {
     );
   };
 
-  const data = {
-    labels: ["Savings", "Loan", "Investment", "Expense", "test"],
-    datasets: [
-      {
-        label: "My Data",
-        data: [250, 300, 300, 200, 150],
-        backgroundColor: [
-          "#0088FE",
-          "#00C49F",
-          "#FFBB28",
-          "#FF8042",
-          "#00C49F",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
   {
     return (
       <div>
         <Grid2
           container
-          bgcolor={"white"}
+          bgcolor="white"
           borderRadius={4}
-          p={3}
-          gap={3}
-          display={"flex"}
+          p={4}
+          spacing={4}
+          boxShadow={3}
         >
           <Grid2 size={12}>
-            <Typography fontWeight={"bold"} fontSize={23} pt={2} pl={3}>
-              Зээлжих зэрэглэлийн оноо (скоринг)
+            <Typography fontWeight="bold" fontSize={24} pl={1}>
+              Зээлжих зэрэглэлийн оноо (Скоринг)
             </Typography>
           </Grid2>
 
           {isScoringCalculated ? (
             <>
-              {/* Left Column - Details */}
+              {/* Left: Detailed Scores */}
               <Grid2
-                size={4.3}
+                size={3.5}
                 container
-                display={"flex"}
-                justifyContent={"center"}
-                spacing={2}
+                direction="column"
+                alignItems="center"
+                p={1}
+                gap={2}
               >
-                <Grid2 size={12} display={"flex"} justifyContent={"center"}>
-                  <Typography
-                    fontSize={18}
-                    sx={{ textDecoration: "underline" }}
-                  >
-                    Онооны дэлгэрэнгүй жагсаалт
-                  </Typography>
+                <Typography fontSize={22} fontWeight="bold">
+                  Онооны дэлгэрэнгүй жагсаалт
+                </Typography>
+                <Grid2 size={12} width="100%">
+                  <CustomDataGrid
+                    columns={scoringValueCol}
+                    data={scoringDesc}
+                  />
                 </Grid2>
-                <Grid2 size={10}>
-                  <ul>
-                    {Array(7)
-                      .fill(null)
-                      .map((_, i) => (
-                        <li key={i}>
-                          Lorem ipsum dolor sit amet consectetur adipisicing
-                          elit.
-                        </li>
-                      ))}
-                  </ul>
+                <Grid2 size={12} display={"flex"} justifyContent={"flex-end"}>
+                  <Button
+                    variant="contained"
+                    onClick={() => setScoringAdvice(true)}
+                  >
+                    Зөвлөмж
+                    {/* <ThumbUpIcon
+                      fontSize="small"
+                      sx={{ ml: 1, color: "white" }}
+                    /> */}
+                  </Button>
                 </Grid2>
               </Grid2>
 
-              {/* Center - Chart */}
+              {/* Center: Score Chart */}
               <Grid2
-                size={3}
+                size={4.5}
                 container
-                spacing={4}
-                p={2}
-                display="flex"
+                direction="column"
+                alignItems="center"
                 justifyContent="center"
+                bgcolor="#f5f7fb"
                 borderRadius={3}
-                bgcolor={"#e9ecf2"}
+                p={3}
               >
-                <Grid2 size={12}>
-                  <Typography
-                    fontSize={24}
-                    fontWeight="bold"
-                    display="flex"
-                    justifyContent="center"
+                <Typography fontSize={22} fontWeight="bold" mb={2}>
+                  Нийт оноо: {scoringData.scoring} ({scoringValue})
+                </Typography>
+                {data ? (
+                  <Box
+                    style={{ width: "500px", height: "500px" }}
+                    display={"flex"}
+                    marginTop={-10}
+                    marginBottom={-12}
                   >
-                    Нийт оноо : 600 (Сайн)
-                  </Typography>
-                </Grid2>
-                <Grid2 size={10}>
-                  <Pie data={data} />
-                </Grid2>
+                    <Doughnut data={data} options={options} />
+                  </Box>
+                ) : (
+                  <Typography>Түр хүлээнэ үү...</Typography>
+                )}
               </Grid2>
 
-              {/* Right Column - Recommendations */}
+              {/* Right: Recommendations */}
               <Grid2
-                size={4.3}
-                display={"flex"}
-                justifyContent={"center"}
+                size={3.8}
                 container
-                spacing={2}
+                direction="column"
+                alignItems="center"
+                gap={2}
               >
-                <Grid2 size={12} display={"flex"} justifyContent={"center"}>
-                  <Typography
-                    fontSize={18}
-                    sx={{ textDecoration: "underline" }}
-                  >
-                    Сайжруулах боломж
-                  </Typography>
-                </Grid2>
-                <Grid2 size={10}>
-                  <ul>
-                    {Array(7)
-                      .fill(null)
-                      .map((_, i) => (
-                        <li key={i}>
-                          Lorem ipsum dolor sit amet consectetur adipisicing
-                          elit.
-                        </li>
-                      ))}
-                  </ul>
-                </Grid2>
+                <Typography fontSize={22} fontWeight="bold">
+                  Онооны тайлбар
+                </Typography>
+                <CustomDataGrid
+                  data={scoringCategory}
+                  columns={scoringValueColumn}
+                />
               </Grid2>
 
-              <Grid2 size={12} display={"flex"} justifyContent={"flex-end"}>
+              {/* Button - Bottom Right */}
+              <Grid2 size={12} display="flex" justifyContent="flex-end">
                 <Button
                   variant="contained"
+                  size="large"
                   onClick={() => setApproveModal(true)}
                 >
                   Зэрэглэл бодуулах
+                  <ArrowForwardIosIcon
+                    fontSize="small"
+                    sx={{ ml: 1, color: "white" }}
+                  />
                 </Button>
               </Grid2>
             </>
           ) : (
-            <>
-              {approveModal && customerMainInfoModal ? (
-                <Grid2 size={12} display={"flex"} justifyContent={"center"}>
-                  <Button
-                    variant="contained"
-                    onClick={() => setApproveModal(true)}
-                  >
-                    Зэрэглэл тооцоолуулах
-                  </Button>
-                </Grid2>
-              ) : null}
-            </>
+            approveModal &&
+            customerMainInfoModal && (
+              <Grid2 size={12} display="flex" justifyContent="center">
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => setApproveModal(true)}
+                >
+                  Зэрэглэл тооцоолуулах
+                </Button>
+              </Grid2>
+            )
           )}
         </Grid2>
+
+        {/* Approval Modal */}
         <CustomModal
           open={approveModal}
           onClose={() => setApproveModal(false)}
-          title={"Зөвшөөрлийн хуудас"}
+          title="Зөвшөөрлийн хуудас"
         >
           <Box sx={{ width: 600, borderRadius: 3 }}>
             <CalculateScoringData />
           </Box>
         </CustomModal>
+
+        {/* Main Info Modal */}
         <CustomModal
           open={customerMainInfoModal}
           onClose={() => setCustomerMainInfoModal(false)}
-          title={"Үндсэн мэдээлэл"}
+          title="Үндсэн мэдээлэл"
         >
           <Box sx={{ width: 1200, borderRadius: 3 }}>
-            <CustomerMainInformation />
+            <CustomerMainInformation
+              onClose={() => setCustomerMainInfoModal(false)}
+            />
+          </Box>
+        </CustomModal>
+
+        <CustomModal
+          open={scoringAdviceModal}
+          onClose={() => setScoringAdvice(false)}
+          title="Зээлжих зэрэглэлийн онооны зөвлөмж"
+        >
+          <Box sx={{ width: 1200, borderRadius: 3 }}>
+            <ScoringAdvice
+              onClose={() => setScoringAdvice(false)}
+              components={scoringDesc}
+            />
           </Box>
         </CustomModal>
       </div>

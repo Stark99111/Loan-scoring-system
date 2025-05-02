@@ -60,7 +60,7 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const existingLoan = await LoanModel.findOne({ name });
+    const existingLoan = await LoanModel.findOne({ name, categoryNums });
     if (existingLoan) {
       return res.status(400).json({ message: "Loan already exists" });
     }
@@ -137,7 +137,7 @@ router.post("/register", async (req, res) => {
     const savedLoan = await newLoan.save();
     return res.status(200).json(savedLoan);
   } catch (e) {
-    console.error("Error registering loan:", e); 
+    console.error("Error registering loan:", e);
     res
       .status(500)
       .json({ error: "An error occurred while registering the loan" });
@@ -263,12 +263,12 @@ router.delete("/delete/:id", async (req, res) => {
 
 router.post("/getById", async (req, res) => {
   try {
-    const { id } = req.body; 
+    const { id } = req.body;
     if (!id) {
       return res.status(400).json({ message: "ID is required" });
     }
 
-    const loans = await LoanModel.find({ _id: id });
+    const loans = await LoanModel.find({ _id: id }).select("-image");
     if (!loans.length) {
       return res.status(200).json({ message: "There are no loans" });
     }
@@ -358,7 +358,6 @@ router.get("/customers/calculate/:id/:type", async (req, res) => {
   const { id, type } = req.params;
 
   try {
-    // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid ID format" });
     }
@@ -367,7 +366,6 @@ router.get("/customers/calculate/:id/:type", async (req, res) => {
     const operationType = parseInt(type, 10);
 
     if (operationType === 1) {
-      // Calculate age
       const result = await CustomerModel.aggregate([
         {
           $match: {
@@ -667,6 +665,139 @@ router.put("/requirement/:requirementId", async (req, res) => {
   } catch (error) {
     console.error("Error updating requirement:", error.message);
     res.status(500).json({ error: "Failed to update requirement" });
+  }
+});
+
+router.delete("/requirement/delete/:id", async (req, res) => {
+  try {
+    const requirementId = req.params.id;
+
+    const result = await LoanModel.updateMany(
+      { requirements: requirementId }, // бүх requirements агуулсан зээлүүдийг хайх
+      { $pull: { requirements: requirementId } } // requirements-оос id-г устгах
+    );
+
+    res.status(200).json({
+      message: "Requirement removed from loans",
+      result,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/checkLoanRequirements/:id", async (req, res) => {
+  try {
+    const loanId = req.params.id;
+    const userId = req.body.userId;
+
+    const customer = await CustomerModel.findById(userId)
+      .populate("AddressInformation")
+      .populate("CreditDatabase")
+      .populate("SocialInsurance")
+      .populate("CustomerMainInformation")
+      .populate("LoanInstitutionRequestHistory")
+      .populate("Scoring");
+
+    if (!customer) {
+      return res.status(404).json("Customer not found!");
+    }
+
+    const loan = await LoanModel.findById(loanId)
+      .populate("requirements")
+      .populate("conditions");
+
+    if (!loan) {
+      return res.status(404).json("Loan not found!");
+    }
+
+    if (!Array.isArray(loan.requirements) || loan.requirements.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Зээлийн шаардлагууд олдсонгүй!" });
+    }
+
+    const requirements = loan.requirements;
+    let returnValue = [];
+
+    for (const element of requirements) {
+      switch (element.requirementCode) {
+        case "1": {
+          const bornDate = customer.CustomerMainInformation?.bornDate;
+          if (bornDate) {
+            const birthDate = new Date(bornDate);
+            const age = new Date().getFullYear() - birthDate.getFullYear();
+            const isAdult =
+              age > 18 ||
+              (age === 18 && new Date().getMonth() >= birthDate.getMonth());
+            returnValue.push({
+              id: element._id,
+              requirement: element.requirementName,
+              value: isAdult,
+            });
+          } else {
+            returnValue.push({
+              id: element._id,
+              requirement: element.requirementName,
+              value: false,
+            });
+          }
+          break;
+        }
+        case "2": {
+          const count = (customer.SocialInsurance || []).filter(
+            (item) => item.institute === "ГОЛОМТБАНК" && item.salaryAmount > 0
+          ).length;
+
+          returnValue.push({
+            id: element._id,
+            requirement: element.requirementName,
+            value: count > 1, // Must be more than 1 month
+          });
+          break;
+        }
+        case "3": {
+          const now = new Date();
+          const twoYearsAgo = new Date();
+          twoYearsAgo.setFullYear(now.getFullYear() - 2);
+
+          const hasNoOverdueBalance = !(customer.CreditDatabase || []).some(
+            (item) => new Date(item.paidDate) < now && item.balance > 0
+          );
+
+          const hasNoRecentNonPerformingLoan = !(
+            customer.CreditDatabase || []
+          ).some(
+            (item) =>
+              item.isNonPerforming && new Date(item.payDate) >= twoYearsAgo
+          );
+
+          returnValue.push({
+            id: element._id,
+            requirement: element.requirementName,
+            value: hasNoOverdueBalance && hasNoRecentNonPerformingLoan,
+          });
+          break;
+        }
+        case "4": {
+          const ficoScore = customer.Scoring?.scoring || 0;
+          returnValue.push({
+            id: element._id,
+            requirement: element.requirementName,
+            value: ficoScore >= 640,
+          });
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    return res.status(200).json(returnValue);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 

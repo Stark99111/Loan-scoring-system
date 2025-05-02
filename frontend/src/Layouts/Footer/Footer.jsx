@@ -8,10 +8,12 @@ const Footer = () => {
   return (
     <Grid2
       container
-      // bgcolor="white"
+      bgcolor="white"
       // borderRadius={5}
       pl={5}
       pr={5}
+      pt={3}
+      pb={3}
       direction={"row"}
       justifyContent={"space-around"}
       spacing={2}

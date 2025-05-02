@@ -17,7 +17,7 @@ import Image from "../../Assets/image.png";
 import CreateIcon from "@mui/icons-material/Create";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import PolicyIcon from "@mui/icons-material/Policy";
 import ArticleIcon from "@mui/icons-material/Article";
@@ -26,10 +26,9 @@ import ContentPasteIcon from "@mui/icons-material/ContentPaste";
 import CreditScoreIcon from "@mui/icons-material/CreditScore";
 
 function Sidebar() {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // const roleId = localStorage.getItem("role");
-  const user = JSON.parse(localStorage.getItem("user"));
-  console.log(user);
+  const user = localStorage.getItem("user");
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -37,6 +36,7 @@ function Sidebar() {
 
   const logout = () => {
     localStorage.removeItem("jwtToken");
+    navigate("/");
     console.log("JWT token removed from localStorage");
     window.location.reload();
   };
@@ -112,7 +112,7 @@ function Sidebar() {
         </Box>
         <Box sx={{ width: 280 }} role="presentation">
           <List>
-            <ListItem key={"Зээлийн мэдээлэл"} disablePadding>
+            <ListItem key={"Зээлийн бүтээгдэхүүний мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/loanInformation">
                 <ListItemIcon
                   sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
@@ -125,11 +125,11 @@ function Sidebar() {
                     fontSize: 14,
                     color: "white",
                   }}
-                  primary={"Зээлийн мэдээлэл"}
+                  primary={"Зээлийн бүтээгдэхүүний мэдээлэл"}
                 />
               </ListItemButton>
             </ListItem>
-            <ListItem key={"Зээл бүртгэх"} disablePadding>
+            {/* <ListItem key={"Зээл бүртгэх"} disablePadding>
               <ListItemButton component={Link} to="/createLoan">
                 <ListItemIcon
                   sx={{
@@ -147,10 +147,8 @@ function Sidebar() {
                   }}
                   primary={"Зээл бүртгэх"}
                 />
-                {/* /changeStatus төлөв өөрчлөх */}
-                {/* /editRequirement  Шаардлага засах*/}
               </ListItemButton>
-            </ListItem>
+            </ListItem> */}
             <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
               {/* <ListItemButton component={Link} to="/registerLoan"> */}
               <ListItemButton component={Link} to="/editLoanInformation">
@@ -192,7 +190,7 @@ function Sidebar() {
                 />
               </ListItemButton>
             </ListItem>
-            <ListItem key={"Зээлийн эрсдэл"} disablePadding>
+            {/* <ListItem key={"Зээлийн эрсдэл"} disablePadding>
               <ListItemButton component={Link} to="/editRequirement">
                 <ListItemIcon
                   sx={{
@@ -211,7 +209,7 @@ function Sidebar() {
                   primary={"Зээлийн эрсдэл"}
                 />
               </ListItemButton>
-            </ListItem>
+            </ListItem> */}
           </List>
         </Box>
         <Box paddingLeft={3}>
@@ -292,7 +290,7 @@ function Sidebar() {
                   <ArticleIcon />
                 </ListItemIcon>
                 <ListItemText
-                  sx={{ color: "white" }}
+                  sx={{ color: "white", width: "75%" }}
                   primaryTypographyProps={{
                     fontSize: 14,
                     color: "white",
@@ -316,7 +314,7 @@ function Sidebar() {
         }}
       >
         <Typography color="white" fontSize={16}>
-          {isSidebarOpen ? user?.firstname + " - " + user?.domain : "-"}
+          {isSidebarOpen ? user : "-"}
         </Typography>
       </Box>
 

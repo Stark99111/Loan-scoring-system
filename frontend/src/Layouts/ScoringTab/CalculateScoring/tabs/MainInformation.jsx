@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Grid2,
   TextField,
@@ -8,7 +8,10 @@ import {
   StepLabel,
   Typography,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
@@ -45,8 +48,43 @@ const CustomStepIcon = ({ active, completed, icon }) => {
   );
 };
 
-const MainInformation = () => {
+const MainInformation = ({ onClose }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const userId = localStorage.getItem("userId");
+  const [customerData, setCustomerData] = useState();
+  const [SocialInsurance, setSocialInsurance] = useState([]);
+  const [LoanInstitutionRequestHistory, setLoanInstitutionRequestHistory] =
+    useState([]);
+  const [AddressInformation, setAddressInformation] = useState();
+  const [CreditDatabase, setCreditDatabase] = useState([]);
+  const [CustomerMainInformation, setCustomerMainInformation] = useState();
+  const [continueSnackBar, setContinueSnackBar] = useState(false);
+  const [errorSnackBar, setErrorSnackBar] = useState(false);
+
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      const res = await axios.get(
+        `http://localhost:5000/Customer/getAllById/${userId}`
+      );
+      if (res.data) {
+        setCustomerData(res.data);
+        const sortedInsurance = (res.data.SocialInsurance || []).sort(
+          (a, b) => new Date(a.paidDate) - new Date(b.paidDate)
+        );
+        setSocialInsurance(sortedInsurance);
+
+        setLoanInstitutionRequestHistory(
+          res.data.LoanInstitutionRequestHistory || null
+        );
+        setAddressInformation(res.data.AddressInformation || null);
+        setCreditDatabase(res.data.CreditDatabase || null);
+        setCustomerMainInformation(res.data.CustomerMainInformation || null);
+      }
+    };
+    if (userId) {
+      fetchCustomerData();
+    }
+  }, [userId]);
 
   const handleNext = () => {
     if (activeStep < steps.length - 1) {
@@ -62,16 +100,37 @@ const MainInformation = () => {
 
   const columns = [
     {
-      label: "№",
-      accessor: "number",
+      label: "Ажил олгогчын нэр",
+      accessor: "institute",
       flex: 2,
       headerAlign: "center",
       contentAlign: "center",
     },
     {
+      label: "Ажил олгогчын код",
+      accessor: "instituteCode",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Цалингийн хэмжээ",
+      accessor: "salaryAmount",
+      flex: 3,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.salaryAmount != null) {
+          return params.salaryAmount.toLocaleString() + " MNT";
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
       label: "Дүн",
       accessor: "amount",
-      flex: 2,
+      flex: 3,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -83,13 +142,6 @@ const MainInformation = () => {
       },
     },
     {
-      label: "Байгууллага",
-      accessor: "institute",
-      flex: 2,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
       label: "Төлсөн огноо",
       accessor: "updatedDate",
       flex: 2,
@@ -98,8 +150,9 @@ const MainInformation = () => {
       renderCell: (params) => {
         if (params.paidDate) {
           const date = new Date(params.paidDate);
-          const formattedDate = date.toLocaleDateString("en-GB");
-          return formattedDate; // Return the formatted date
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${month}/${year}`;
         } else {
           return "-";
         }
@@ -109,8 +162,8 @@ const MainInformation = () => {
 
   const columnZMS = [
     {
-      label: "Төрөл / валют",
-      accessor: "currency",
+      label: "Байгууллага",
+      accessor: "loanInstitution",
       flex: 2,
       headerAlign: "center",
       contentAlign: "center",
@@ -123,7 +176,23 @@ const MainInformation = () => {
       contentAlign: "center",
       renderCell: (params) => {
         if (params.firstLoanAmount != null) {
-          return params.firstLoanAmount.toLocaleString(2);
+          return (
+            params.firstLoanAmount.toLocaleString(2) + " " + params.currency
+          );
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Зээлийн үлдэгдэл",
+      accessor: "balance",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.balance != null) {
+          return params.balance.toLocaleString(2) + " " + params.currency;
         } else {
           return "-";
         }
@@ -132,7 +201,7 @@ const MainInformation = () => {
     {
       label: "Хүү (%)",
       accessor: "institute",
-      flex: 2,
+      flex: 1,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -144,9 +213,9 @@ const MainInformation = () => {
       },
     },
     {
-      label: "Төлөгдөх огноо",
+      label: "Олгосон огноо",
       accessor: "updatedDate",
-      flex: 2,
+      flex: 1.5,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -160,9 +229,9 @@ const MainInformation = () => {
       },
     },
     {
-      label: "Төлсөн огноо",
+      label: "Төлөх ёстой огноо",
       accessor: "updatedDate",
-      flex: 2,
+      flex: 1.5,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -176,25 +245,9 @@ const MainInformation = () => {
       },
     },
     {
-      label: "Зээл олгосон байгууллага",
-      accessor: "updatedDate",
-      flex: 2,
-      headerAlign: "center",
-      contentAlign: "center",
-      renderCell: (params) => {
-        if (params.paidDate) {
-          const date = new Date(params.paidDate);
-          const formattedDate = date.toLocaleDateString("en-GB");
-          return formattedDate; // Return the formatted date
-        } else {
-          return "-";
-        }
-      },
-    },
-    {
       label: "Тайлбар",
       accessor: "desc",
-      flex: 2,
+      flex: 5,
       headerAlign: "center",
       contentAlign: "center",
     },
@@ -204,7 +257,7 @@ const MainInformation = () => {
     {
       label: "№",
       accessor: "number",
-      flex: 2,
+      flex: 1,
       headerAlign: "center",
       contentAlign: "center",
     },
@@ -232,7 +285,7 @@ const MainInformation = () => {
     {
       label: "Хүү (%)",
       accessor: "institute",
-      flex: 2,
+      flex: 1,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -246,14 +299,14 @@ const MainInformation = () => {
     {
       label: "Хугацаа (сар)",
       accessor: "term",
-      flex: 2,
+      flex: 1,
       headerAlign: "center",
       contentAlign: "center",
     },
     {
       label: "Огноо",
       accessor: "date",
-      flex: 2,
+      flex: 1.5,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
@@ -269,11 +322,39 @@ const MainInformation = () => {
     {
       label: "Тайлбар",
       accessor: "desc",
-      flex: 2,
+      flex: 4,
       headerAlign: "center",
       contentAlign: "center",
     },
   ];
+
+  const ContinueButtonHandle = () => {
+    const saveCustomerData = async () => {
+      const reqBody = {
+        _id: customerData._id,
+        AddressInformation: AddressInformation,
+        CustomerMainInformation: CustomerMainInformation,
+      };
+      const res = await axios.post(
+        `http://localhost:5000/customer/registerCustomerMainInformation`,
+        {
+          ...reqBody,
+        }
+      );
+      if (res.status === 200) {
+        setContinueSnackBar(true);
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        setErrorSnackBar(true);
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      }
+    };
+    saveCustomerData();
+  };
 
   return (
     <Box>
@@ -295,25 +376,88 @@ const MainInformation = () => {
         {activeStep === 0 && (
           <Grid2 container spacing={2}>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Овог" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="Овог"
+                value={CustomerMainInformation?.lastName}
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    lastName: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Нэр" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="Нэр"
+                value={CustomerMainInformation?.firstName}
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    firstName: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Ургийн овог" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="Ургийн овог"
+                value={CustomerMainInformation?.familyName}
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    familyName: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Нас" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="Хүйс"
+                value={CustomerMainInformation?.sex}
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    sex: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Хүйс" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="Иргэншил"
+                value={CustomerMainInformation?.nation}
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    nation: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Иргэншил" />
-            </Grid2>
-            <Grid2 size={3}>
-              <TextField fullWidth size="small" label="РД" />
+              <TextField
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                size="small"
+                label="РД"
+                value={customerData?.idNumber}
+              />
             </Grid2>
             <Grid2 size={3}>
               <TextField
@@ -322,6 +466,19 @@ const MainInformation = () => {
                 label="Төрсөн огноо"
                 type="date"
                 InputLabelProps={{ shrink: true }}
+                value={
+                  CustomerMainInformation?.bornDate
+                    ? new Date(CustomerMainInformation?.bornDate)
+                        .toISOString()
+                        .split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  setCustomerMainInformation({
+                    ...CustomerMainInformation,
+                    bornDate: e.target.value,
+                  });
+                }}
               />
             </Grid2>
           </Grid2>
@@ -330,41 +487,116 @@ const MainInformation = () => {
         {activeStep === 1 && (
           <Grid2 container spacing={2}>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Улс" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Улс"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.country}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    country: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Хот" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Хот"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.city}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    city: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Баг/дүүрэг" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Баг/дүүрэг"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.district}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    district: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Гудамж" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Гудамж"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.street}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    street: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Тоот" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Тоот"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.number}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    number: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
             <Grid2 size={3}>
-              <TextField fullWidth size="small" label="Сууцын төрөл" />
+              <TextField
+                fullWidth
+                size="small"
+                label="Сууцын төрөл"
+                InputLabelProps={{ shrink: true }}
+                value={AddressInformation?.typeOfSeat}
+                onChange={(e) => {
+                  setAddressInformation({
+                    ...AddressInformation,
+                    typeOfSeat: e.target.value,
+                  });
+                }}
+              />
             </Grid2>
           </Grid2>
         )}
 
         {activeStep === 2 && (
           <Grid2 size={12}>
-            <CustomDataGrid data={[]} columns={columns} />
+            <CustomDataGrid data={SocialInsurance} columns={columns} />
           </Grid2>
         )}
 
         {activeStep === 3 && (
           <Grid2 size={12}>
-            <CustomDataGrid data={[]} columns={columnZMS} />
+            <CustomDataGrid data={CreditDatabase} columns={columnZMS} />
           </Grid2>
         )}
 
         {activeStep === 4 && (
           <Grid2 size={12}>
-            <CustomDataGrid data={[]} columns={loanInstitutionRequest} />
+            <CustomDataGrid
+              data={LoanInstitutionRequestHistory}
+              columns={loanInstitutionRequest}
+            />
           </Grid2>
         )}
 
@@ -379,14 +611,45 @@ const MainInformation = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={handleNext}
-            disabled={activeStep === steps.length - 1}
+            onClick={
+              activeStep === steps.length - 1
+                ? ContinueButtonHandle
+                : handleNext
+            }
           >
             {activeStep === steps.length - 1
               ? "Зэрэглэл тооцоолуулах"
               : "Үргэлжлүүлэх"}
           </Button>
         </Grid2>
+        <Snackbar
+          open={continueSnackBar}
+          autoHideDuration={3000}
+          onClose={() => setContinueSnackBar(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setContinueSnackBar(false)}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Мэдээлэл шинэчилсэн. Скоринг тооцоолж байна.
+          </Alert>
+        </Snackbar>
+        <Snackbar
+          open={errorSnackBar}
+          autoHideDuration={3000}
+          onClose={() => setErrorSnackBar(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setErrorSnackBar(false)}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Алдаа гарлаа.
+          </Alert>
+        </Snackbar>
       </Grid2>
     </Box>
   );

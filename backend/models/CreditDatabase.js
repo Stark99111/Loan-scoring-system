@@ -16,11 +16,17 @@ const CreditDatabaseSchema = new mongoose.Schema({
   paidDate: {
     type: Date,
   },
+  balance: {
+    type: Number,
+  },
   loanInstitution: {
     type: String,
   },
   desc: {
     type: String,
+  },
+  isNonPerforming: {
+    type: Boolean,
   },
 });
 

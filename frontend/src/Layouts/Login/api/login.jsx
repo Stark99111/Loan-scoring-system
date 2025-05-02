@@ -1,28 +1,31 @@
 import axios from "axios";
 
-export default async function Login(domain, password) {
+export default async function Login(domain, password, isAdmin) {
   try {
-    if (domain && password) {
-      const response = await axios.post(
-        "http://localhost:5000/employee/login",
-        {
-          domain,
-          password,
-        }
-      );
+    if (!domain || !password) return null;
 
-      if (response?.status === 200) {
-        const { token, user } = response.data;
-        localStorage.setItem("jwtToken", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("role", user.role[0].RoleNum);
+    let url = isAdmin
+      ? "http://localhost:5000/employee/login"
+      : "http://localhost:5000/customer/login";
 
-        return response;
-      } else {
-        return null;
-      }
+    const payload = isAdmin
+      ? { domain, password }
+      : { phoneNumber: domain, password };
+
+    const response = await axios.post(url, payload);
+
+    if (response?.status === 200) {
+      const { token, user, userId } = response.data;
+      localStorage.setItem("jwtToken", token);
+      localStorage.setItem("user", user);
+      localStorage.setItem("userId", userId);
+
+      return 200;
+    } else {
+      return null;
     }
   } catch (e) {
     console.error("API Error:", e);
+    return null;
   }
 }

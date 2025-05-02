@@ -1,16 +1,12 @@
 const express = require("express");
 const EmployeeModel = require("../models/Employee");
 const router = express.Router();
-const BranchModel = require("../models/Branch");
-const RoleModel = require("../models/Role");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 router.get("/", async (req, res) => {
   try {
-    const employees = await EmployeeModel.find()
-      .populate("role") // Populate the category details
-      .populate("branch"); // Populate the requirements;
+    const employees = await EmployeeModel.find();
     if (!employees.length) {
       return res.status(500).json({ message: "There are no employees" });
     }
@@ -22,25 +18,9 @@ router.get("/", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    const {
-      firstname,
-      lastname,
-      domain,
-      phoneNumber,
-      password,
-      branchNums,
-      roleNums,
-    } = req.body;
+    const { userName, domain, userRole, password } = req.body;
 
-    if (
-      !domain ||
-      !phoneNumber ||
-      !branchNums ||
-      !roleNums ||
-      !firstname ||
-      !lastname ||
-      !password
-    ) {
+    if (!domain || !userName || !userRole || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -49,26 +29,11 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Employee already exists" });
     }
 
-    const branches = await BranchModel.find({ BranchNum: { $in: branchNums } });
-    const roles = await RoleModel.find({ RoleNum: { $in: roleNums } });
-
-    if (branchNums.length !== 0 && branches.length !== branchNums.length) {
-      return res.status(404).json({ message: " branches not found" });
-    }
-    if (roleNums.length !== 0 && roles.length !== roleNums.length) {
-      return res.status(404).json({ message: " roles not found" });
-    }
-    console.log(branchNums.length);
-    console.log(roles._id);
-
     const newEmployee = new EmployeeModel({
+      userName,
       domain,
-      phoneNumber,
-      firstname,
-      lastname,
+      userRole,
       password,
-      branch: branches.map((branch) => branch._id),
-      role: roles.map((role) => role._id),
     });
 
     const savedEmployee = await newEmployee.save();
@@ -90,9 +55,7 @@ router.post("/login", async (req, res) => {
     }
 
     // Find employee by domain
-    const employee = await EmployeeModel.findOne({ domain })
-      .populate("role") // Populate the category details
-      .populate("branch");
+    const employee = await EmployeeModel.findOne({ domain });
     if (!employee) {
       return res.status(400).json({ message: "Employee not found" });
     }
@@ -118,7 +81,7 @@ router.post("/login", async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
-      user: employee,
+      user: employee,s
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
