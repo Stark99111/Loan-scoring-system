@@ -45,7 +45,7 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
       borderRadius={5}
     >
       {/* Image Section */}
-      <Grid2 size={4} pl={1}>
+      {/* <Grid2 size={4} pl={1}>
         {loan.image && (
           <img
             src={loan.image}
@@ -60,11 +60,11 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
             }}
           />
         )}
-      </Grid2>
+      </Grid2> */}
 
       {/* Details Section */}
       <Grid2
-        size={8}
+        size={12}
         container
         flexDirection="column"
         alignItems="center"
@@ -77,6 +77,8 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
             paddingBottom: 2,
             fontSize: 22,
             textAlign: "center",
+            display: "flex",
+            justifyContent: "center",
           }}
         >
           {loan.name}
@@ -87,6 +89,7 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
             paddingRight: 8,
             fontSize: 17,
             fontWeight: "500",
+            textAlign: "center",
           }}
         >
           {loan.description}
@@ -94,12 +97,15 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
       </Grid2>
 
       {/* Tabs Section */}
-      <Grid2 size={6} sx={{ marginTop: 2, marginRight: 10 }}>
+      <Grid2 size={12} sx={{ marginTop: 2, marginRight: 10 }}>
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
           centered
           sx={{
+            flexGrow: 1,
+            spacing: 10,
+            // bgcolor: "yellow",
             paddingBottom: 1,
             "& .MuiTab-root": {
               fontWeight: "bold",
@@ -111,11 +117,11 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
             },
           }}
         >
-          <Tab label="Зээлийн нөхцөл" />
-          <Tab label="Тавигдах шаардлага" />
+          <Tab label="Зээлийн нөхцөл" sx={{ marginRight: 3 }} />
+          <Tab label="Тавигдах шаардлага" sx={{ marginLeft: 3 }} />
         </Tabs>
       </Grid2>
-      <Grid2 size={4}></Grid2>
+      <Grid2 size={12}></Grid2>
 
       {/* Tab Content */}
       {tabValue === 0 && (
@@ -133,7 +139,7 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
                   pt={1}
                   textAlign={"justify"}
                 >
-                  <ChevronRightIcon fontSize="medium" />
+                  {/* <ChevronRightIcon fontSize="medium" /> */}
                   <Typography
                     key={index}
                     sx={{ fontWeight: "600", color: "#464a50" }}

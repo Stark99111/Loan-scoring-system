@@ -13,6 +13,7 @@ import GetLoan from "./api/GetLoan";
 import LoanDetailsModal from "./modal/LoanMainInfo";
 import CustomModal from "../../Components/CustomModal";
 import LoanRiskCalculater from "./modal/LoanRiskCalculater";
+import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -124,12 +125,14 @@ const LoanInfo = () => {
               boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.5)",
             }}
           >
-            <Grid2 size={4} pl={4} pt={4}>
+            <Grid2 size={5} pl={4} pt={4}>
               <img
                 src={item?.image}
                 onError={(e) => (e.target.style.display = "none")}
                 width={"100%"}
                 height={"auto"}
+                display={"flex"}
+                alignItems={"center"}
                 style={{
                   boxShadow:
                     "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
@@ -138,7 +141,7 @@ const LoanInfo = () => {
               />
             </Grid2>
             <Grid2
-              size={8}
+              size={7}
               container
               flexDirection="column"
               alignItems="center"
@@ -151,6 +154,7 @@ const LoanInfo = () => {
                   paddingBottom: 2,
                   fontSize: 22,
                   textAlign: "center",
+                  color: "#05357E",
                 }}
               >
                 {item?.name}
@@ -172,14 +176,33 @@ const LoanInfo = () => {
               pb={2}
               display={"flex"}
               justifyContent={"flex-end"}
+              alignItems="center"
             >
               <Button
                 variant="contained"
-                sx={{ fontWeight: "bold", height: "40px", bgcolor: "#05357E" }}
+                sx={{
+                  fontWeight: "bold",
+                  height: "40px",
+                  bgcolor: "#ffffff",
+                  border: "none",
+                  boxShadow: "none",
+                  "&:hover": {
+                    border: "none",
+                    boxShadow: "none",
+                    bgcolor: "#ffffff",
+                    color: "#05357E",
+                  },
+                  color: "#05357E",
+                }}
                 onClick={() => handleOpen(item._id)}
               >
                 Дэлгэрэнгүй
               </Button>
+              <TrendingFlatIcon
+                sx={{
+                  color: "#05357E",
+                }}
+              ></TrendingFlatIcon>
             </Grid2>
           </Grid2>
         ))}
