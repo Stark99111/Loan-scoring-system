@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, Tab, Tabs, Grid2, Button } from "@mui/material";
 import GetLoanDataById from "../../../api/GetLoanDataById";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Divider from "@mui/material/Divider";
 
-const LoanDetailsModal = ({ id, style, onClose }) => {
+const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [loan, setLoan] = useState();
   const [req, setReq] = useState([]);
   const [con, setCon] = useState([]);
   const [tabValue, setTabValue] = useState(0);
+  const [isRequirementAvailable, setIsRequirementAvailable] = useState(false);
+  const [isScoringExist, setIsScoringExist] = useState(false);
 
   useEffect(() => {
     GetLoanDataById(id).then((data) => {
@@ -16,13 +17,33 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
         setLoan(data.data.loans[0]);
         setReq(data.data.requirements || []);
         setCon(data.data.conditions || []);
+      } else {
+        setLoan(null);
+        setReq(null);
+        setCon(null);
       }
     });
   }, [id]);
 
+  useEffect(() => {
+    if (customerData && customerData.Scoring) {
+      setIsScoringExist(true);
+    } else {
+      setIsScoringExist(false);
+    }
+  }, [customerData]);
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  useEffect(() => {
+    if (req && req.length) {
+      setIsRequirementAvailable(req.some((item) => item.requirementCode));
+    } else {
+      setIsRequirementAvailable(false);
+    }
+  }, [req]);
 
   if (!loan) {
     return (
@@ -209,15 +230,17 @@ const LoanDetailsModal = ({ id, style, onClose }) => {
           )}
         </>
       )}
-      <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
-        <Button
-          variant={"contained"}
-          sx={{ fontWeight: "bold", height: "35px", bgcolor: "#05357E" }}
-          onClick={onClose}
-        >
-          Хүсэлт үүсгэх
-        </Button>
-      </Grid2>
+      {isRequirementAvailable && isScoringExist && (
+        <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
+          <Button
+            variant={"contained"}
+            sx={{ fontWeight: "bold", height: "35px", bgcolor: "#05357E" }}
+            onClick={onClose}
+          >
+            Хүсэлт үүсгэх
+          </Button>
+        </Grid2>
+      )}
     </Grid2>
   );
 };

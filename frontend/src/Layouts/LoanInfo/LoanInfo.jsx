@@ -14,6 +14,7 @@ import LoanDetailsModal from "./modal/LoanMainInfo";
 import CustomModal from "../../Components/CustomModal";
 import LoanRiskCalculater from "./modal/LoanRiskCalculater";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
+import axios from "axios";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -62,6 +63,20 @@ const LoanInfo = () => {
   const [loanModal, setLoanModal] = useState(false);
   const [id, setId] = useState();
   const [loanRiskModal, setLoanRIskModal] = useState(false);
+  const user = localStorage.getItem("userId");
+  const [customerData, setCustomerData] = useState(null);
+
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      const { status, data } = await axios.get(
+        `http://localhost:5000/Customer/getAllById/${user}`
+      );
+      if (status === 200) {
+        setCustomerData(data);
+      }
+    };
+    fetchCustomerData();
+  }, [user]);
 
   const handleOpen = (id) => {
     setId(id);
@@ -274,16 +289,24 @@ const LoanInfo = () => {
         <Grid2 size={12}>
           <CustomModal open={loanModal} onClose={handleClose}>
             <Box sx={{ width: 900, borderRadius: 3 }}>
-              <LoanDetailsModal id={id} onClose={handleCloseModal} />
+              <LoanDetailsModal
+                id={id}
+                onClose={handleCloseModal}
+                customerData={customerData}
+              />
             </Box>
           </CustomModal>
           <CustomModal
             open={loanRiskModal}
             onClose={() => setLoanRIskModal(false)}
-            title={" Зээлийн эрсдэл"}
+            title={"Мэдээлэл шалгах"}
           >
             <Box sx={{ width: 600, borderRadius: 3 }}>
-              <LoanRiskCalculater id={id} handleBack={handleBack} />
+              <LoanRiskCalculater
+                id={id}
+                handleBack={handleBack}
+                customerData={customerData}
+              />
             </Box>
           </CustomModal>
         </Grid2>
