@@ -299,7 +299,7 @@ const LoanInfo = () => {
           <CustomModal
             open={loanRiskModal}
             onClose={() => setLoanRIskModal(false)}
-            title={"Мэдээлэл шалгах"}
+            title={"Зээлийн шалгуур"}
           >
             <Box sx={{ width: 600, borderRadius: 3 }}>
               <LoanRiskCalculater
