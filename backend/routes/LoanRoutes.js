@@ -11,7 +11,10 @@ const SocialInsuranceModel = require("../models/SocialInsurance");
 
 router.get("/", async (req, res) => {
   try {
-    const loans = await LoanModel.find();
+    const loans = await LoanModel.find()
+      .populate("conditions")
+      .populate("requirements")
+      .populate("bankCategories");
     const unlinkedRequirements = await RequirementModel.find({
       _id: {
         $nin: (
@@ -795,6 +798,81 @@ router.post("/checkLoanRequirements/:id", async (req, res) => {
     }
 
     return res.status(200).json(returnValue);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/getActiveLoanDetails/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const customer = await CustomerModel.findById(userId).populate(
+      "CreditDatabase"
+    );
+
+    if (!customer) {
+      return res.status(404).json("Customer not found!");
+    }
+    if (!customer.CreditDatabase) {
+      return res.status(200).json(null);
+    }
+
+    const now = new Date();
+    const creditdata = customer.CreditDatabase.filter(
+      (item) => item.paidDate > now && item.balance
+    );
+    return res.status(200).json(creditdata);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/getCustomerFinancialInformation/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const customer = await CustomerModel.findById(userId)
+      .populate("AddressInformation")
+      .populate("CreditDatabase")
+      .populate("SocialInsurance")
+      .populate("CustomerMainInformation")
+      .populate("LoanInstitutionRequestHistory")
+      .populate("Scoring");
+
+    if (!customer) {
+      return res.status(404).json("Customer not found!");
+    }
+
+    let totalSalary = 0;
+    let dti = 0;
+    let activeLoans = 0;
+    let scoring = 0;
+    if (customer.SocialInsurance) {
+      let amount = 0;
+      await customer.SocialInsurance.map(
+        (item) => (amount += item.salaryAmount)
+      );
+      totalSalary = amount / customer.SocialInsurance.length;
+    }
+    if (customer.CreditDatabase) {
+      const now = new Date();
+      customer.CreditDatabase.filter(
+        (item) => item.paidDate > now && item.balance
+      ).map((item) => (activeLoans += item.balance));
+    }
+    if (customer.Scoring) {
+      scoring = customer.Scoring.scoring;
+      dti = customer.Scoring.DTI;
+    }
+    return res.status(200).json({
+      totalSalary: totalSalary,
+      dti: dti,
+      activeLoans: activeLoans,
+      scoring: scoring,
+    });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Server error" });

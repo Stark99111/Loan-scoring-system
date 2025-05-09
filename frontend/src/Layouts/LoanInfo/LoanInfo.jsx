@@ -15,6 +15,7 @@ import CustomModal from "../../Components/CustomModal";
 import LoanRiskCalculater from "./modal/LoanRiskCalculater";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 import axios from "axios";
+import CustomerCreditData from "./modal/CustomerCreditData";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -65,6 +66,7 @@ const LoanInfo = () => {
   const [loanRiskModal, setLoanRIskModal] = useState(false);
   const user = localStorage.getItem("userId");
   const [customerData, setCustomerData] = useState(null);
+  const [customerCreditModal, setCustomerCreditModal] = useState(false);
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -77,6 +79,11 @@ const LoanInfo = () => {
     };
     fetchCustomerData();
   }, [user]);
+
+  const handleOpenCredit = () => {
+    setLoanRIskModal(false);
+    setCustomerCreditModal(true);
+  };
 
   const handleOpen = (id) => {
     setId(id);
@@ -299,13 +306,32 @@ const LoanInfo = () => {
           <CustomModal
             open={loanRiskModal}
             onClose={() => setLoanRIskModal(false)}
-            title={"Зээлийн шалгуур"}
+            title={"Зээлийн хүсэлт үүсгэх"}
           >
-            <Box sx={{ width: 600, borderRadius: 3 }}>
+            <Box sx={{ width: 800, borderRadius: 3 }}>
               <LoanRiskCalculater
                 id={id}
                 handleBack={handleBack}
                 customerData={customerData}
+                handleOpenCredit={handleOpenCredit}
+                customerId={user}
+              />
+            </Box>
+          </CustomModal>
+
+          <CustomModal
+            open={customerCreditModal}
+            title={"Зээлийн хүсэлт үүсгэх"}
+            onClose={() => setCustomerCreditModal(false)}
+          >
+            <Box sx={{ width: 800, borderRadius: 3 }}>
+              <CustomerCreditData
+                handleBackButton={() => {
+                  setCustomerCreditModal(false);
+                  setLoanModal(true);
+                }}
+                customerId={user}
+                loanData={loanData.find((item) => item._id === id)}
               />
             </Box>
           </CustomModal>
