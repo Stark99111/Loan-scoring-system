@@ -7,15 +7,17 @@ import {
   Typography,
   Button,
   Modal,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import PropTypes from "prop-types";
 import GetLoan from "./api/GetLoan";
 import LoanDetailsModal from "./modal/LoanMainInfo";
 import CustomModal from "../../Components/CustomModal";
-import LoanRiskCalculater from "./modal/LoanRiskCalculater";
+import LoanRiskCalculater from "./modal/RegisterCustomerRequest";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 import axios from "axios";
-import CustomerCreditData from "./modal/CustomerCreditData";
+import RegisterLoanRequest from "./modal/RegisterLoanRequest";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -32,18 +34,6 @@ function CustomTabPanel(props) {
     </div>
   );
 }
-const style = {
-  // position: "absolute",
-  // top: "50%",
-  // left: "50%",
-  // transform: "translate(-50%, -50%)",
-  // // width: 800,
-  // bgcolor: "background.paper",
-  // boxShadow: 24,
-  // pt: 2,
-  // px: 4,
-  // pb: 3,
-};
 
 CustomTabPanel.propTypes = {
   children: PropTypes.node,
@@ -67,6 +57,8 @@ const LoanInfo = () => {
   const user = localStorage.getItem("userId");
   const [customerData, setCustomerData] = useState(null);
   const [customerCreditModal, setCustomerCreditModal] = useState(false);
+  const [continueSnackBar, setContinueSnackBar] = useState(false);
+  const [registeredLoanRequest, setRegisterLoanRequest] = useState("")
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -122,14 +114,14 @@ const LoanInfo = () => {
   };
 
   const renderTabContent = (filterCategoryId) => {
-    console.log(loanData);
-    console.log(filterCategoryId);
     const filteredData = filterCategoryId
       ? loanData.filter(
           (item) =>
-            item?.bankCategories === filterCategoryId && item?.status === true
+            item?.bankCategories?._id === filterCategoryId &&
+            item?.status === true
         )
       : loanData.filter((item) => item?.status === true);
+
 
     return (
       <Grid2 container gap={2} justifyContent={"space-around"}>
@@ -310,11 +302,11 @@ const LoanInfo = () => {
           >
             <Box sx={{ width: 800, borderRadius: 3 }}>
               <LoanRiskCalculater
-                id={id}
                 handleBack={handleBack}
-                customerData={customerData}
                 handleOpenCredit={handleOpenCredit}
+                loanData={loanData.find((item) => item._id === id)}
                 customerId={user}
+                setRegisterLoanRequest={setRegisterLoanRequest}
               />
             </Box>
           </CustomModal>
@@ -325,17 +317,36 @@ const LoanInfo = () => {
             onClose={() => setCustomerCreditModal(false)}
           >
             <Box sx={{ width: 800, borderRadius: 3 }}>
-              <CustomerCreditData
+              <RegisterLoanRequest
                 handleBackButton={() => {
                   setCustomerCreditModal(false);
                   setLoanModal(true);
                 }}
-                customerId={user}
+                registeredLoanRequest={registeredLoanRequest}
+                customerData={customerData}
                 loanData={loanData.find((item) => item._id === id)}
+                onClose={() => {
+                  setCustomerCreditModal(false);
+                  setContinueSnackBar(true);
+                }}
               />
             </Box>
           </CustomModal>
         </Grid2>
+        <Snackbar
+          open={continueSnackBar}
+          autoHideDuration={3000}
+          onClose={() => setContinueSnackBar(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setContinueSnackBar(false)}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Зээлийн хүсэлт амжилттай бүртгэлээ.
+          </Alert>
+        </Snackbar>
       </Grid2>
     </>
   );

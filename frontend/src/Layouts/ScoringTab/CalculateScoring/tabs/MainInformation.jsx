@@ -24,7 +24,6 @@ const steps = [
   { label: "Хаягийн мэдээлэл", icon: HomeIcon },
   { label: "НДШ мэдээлэл", icon: PersonIcon },
   { label: "ЗМС-ын мэдээлэл", icon: ContactMailIcon },
-  { label: "Зээлийн хүсэлтийн мэдээлэл", icon: NoteAddIcon },
 ];
 
 const CustomStepIcon = ({ active, completed, icon }) => {
@@ -53,8 +52,6 @@ const MainInformation = ({ onClose }) => {
   const userId = localStorage.getItem("userId");
   const [customerData, setCustomerData] = useState();
   const [SocialInsurance, setSocialInsurance] = useState([]);
-  const [LoanInstitutionRequestHistory, setLoanInstitutionRequestHistory] =
-    useState([]);
   const [AddressInformation, setAddressInformation] = useState();
   const [CreditDatabase, setCreditDatabase] = useState([]);
   const [CustomerMainInformation, setCustomerMainInformation] = useState();
@@ -73,9 +70,6 @@ const MainInformation = ({ onClose }) => {
         );
         setSocialInsurance(sortedInsurance);
 
-        setLoanInstitutionRequestHistory(
-          res.data.LoanInstitutionRequestHistory || null
-        );
         setAddressInformation(res.data.AddressInformation || null);
         setCreditDatabase(res.data.CreditDatabase || null);
         setCustomerMainInformation(res.data.CustomerMainInformation || null);
@@ -253,81 +247,6 @@ const MainInformation = ({ onClose }) => {
     },
   ];
 
-  const loanInstitutionRequest = [
-    {
-      label: "№",
-      accessor: "number",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
-      label: "Хүсэлтийн дүн",
-      accessor: "desiredAmount",
-      flex: 2,
-      headerAlign: "center",
-      contentAlign: "center",
-      renderCell: (params) => {
-        if (params.desiredAmount != null) {
-          return params.desiredAmount.toLocaleString() + " MNT";
-        } else {
-          return "-";
-        }
-      },
-    },
-    {
-      label: "Байгууллага",
-      accessor: "loanInstitution",
-      flex: 2,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
-      label: "Хүү (%)",
-      accessor: "institute",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-      renderCell: (params) => {
-        if (params.interest != null) {
-          return params.interest.toFixed(2) + " %";
-        } else {
-          return "-";
-        }
-      },
-    },
-    {
-      label: "Хугацаа (сар)",
-      accessor: "term",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
-      label: "Огноо",
-      accessor: "date",
-      flex: 1.5,
-      headerAlign: "center",
-      contentAlign: "center",
-      renderCell: (params) => {
-        if (params.date) {
-          const date = new Date(params.date);
-          const formattedDate = date.toLocaleDateString("en-GB");
-          return formattedDate; // Return the formatted date
-        } else {
-          return "-";
-        }
-      },
-    },
-    {
-      label: "Тайлбар",
-      accessor: "desc",
-      flex: 4,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-  ];
-
   const ContinueButtonHandle = () => {
     const saveCustomerData = async () => {
       const reqBody = {
@@ -340,6 +259,22 @@ const MainInformation = ({ onClose }) => {
         {
           ...reqBody,
         }
+      );
+      // if (res.status === 200) {
+      //   setContinueSnackBar(true);
+      //   setTimeout(() => {
+      //     onClose();
+      //   }, 1000);
+      // } else {
+      //   setErrorSnackBar(true);
+      //   setTimeout(() => {
+      //     onClose();
+      //   }, 1000);
+      // }
+    };
+    const calculateScoring = async () => {
+      const res = await axios.post(
+        `http://localhost:5000/customer/calculateScoring/${customerData._id}`
       );
       if (res.status === 200) {
         setContinueSnackBar(true);
@@ -354,6 +289,7 @@ const MainInformation = ({ onClose }) => {
       }
     };
     saveCustomerData();
+    calculateScoring();
   };
 
   return (
@@ -591,26 +527,29 @@ const MainInformation = ({ onClose }) => {
           </Grid2>
         )}
 
-        {activeStep === 4 && (
-          <Grid2 size={12}>
-            <CustomDataGrid
-              data={LoanInstitutionRequestHistory}
-              columns={loanInstitutionRequest}
-            />
-          </Grid2>
-        )}
-
         {/* Buttons */}
         <Grid2 size={12} display="flex" justifyContent="space-between" mt={3}>
           <Button
             variant="outlined"
             onClick={handleBack}
             disabled={activeStep === 0}
+            sx={{
+              width: "10%",
+              color: "white",
+              bgcolor: activeStep === 0 ? "ffff" : "#3166cc",
+              borderRadius: 5,
+            }}
           >
             Буцах
           </Button>
           <Button
             variant="contained"
+            sx={{
+              width: "20%",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
+            }}
             onClick={
               activeStep === steps.length - 1
                 ? ContinueButtonHandle

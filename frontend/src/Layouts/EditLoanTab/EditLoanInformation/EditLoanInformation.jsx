@@ -50,9 +50,10 @@ const EditLoanInformation = ({
     if (data.name) setLoanName(data.name);
     if (data.description) setDescription(data.description);
 
+    console.log(data);
     if (data.requirements && data.requirements.length) {
       const reqs = data.requirements.map((item) =>
-        requirementData?.find((item1) => item === item1._id)
+        requirementData?.find((item1) => item._id === item1._id)
       );
       setRequirements(reqs.map((r) => r?.requirementName || "")); // Set readable requirement text
     }
@@ -64,13 +65,13 @@ const EditLoanInformation = ({
     }
     if (data.bankCategories) {
       const findedBankCat = bankOptions.find(
-        (item) => item._id === data.bankCategories
+        (item) => item._id === data.bankCategories._id
       );
       setBankType(findedBankCat?.CategoryCode || null);
     }
     if (data.conditions && data.conditions.length) {
       const conditionFields = data.conditions.map((condId) =>
-        fieldData.find((field) => field._id === condId)
+        fieldData.find((field) => field._id === condId._id)
       );
       const cleanedFields = conditionFields
         .filter((item) => item)
@@ -256,11 +257,10 @@ const EditLoanInformation = ({
                     onClick={handleRemoveField}
                     variant="contained"
                     sx={{
-                      height: "35px",
-                      fontSize: 15,
-                      fontWeight: "bold",
-                      backgroundColor: "#05357E",
-                      ml: 2,
+                      width: "100%",
+                      color: "white",
+                      bgcolor: "#3166cc",
+                      borderRadius: 5,
                     }}
                   >
                     Хасах
@@ -275,16 +275,21 @@ const EditLoanInformation = ({
             )}
           </React.Fragment>
         ))}
-        <Grid2 size={1}>
+        <Grid2
+          size={1}
+          display="flex"
+          alignItems="center"
+          ml={requirements.length === 1 ? -2 : -2}
+        >
           <Button
             variant="contained"
             fullWidth
             onClick={handleAddField}
             sx={{
-              height: "35px",
-              fontSize: 15,
-              fontWeight: "bold",
-              backgroundColor: "#05357E",
+              width: "100%",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
             }}
           >
             Нэмэх
@@ -312,11 +317,10 @@ const EditLoanInformation = ({
                     onClick={handleRemoveRequirement}
                     variant="contained"
                     sx={{
-                      height: "35px",
-                      fontSize: 15,
-                      fontWeight: "bold",
-                      backgroundColor: "#05357E",
-                      ml: 2,
+                      width: "100%",
+                      color: "white",
+                      bgcolor: "#3166cc",
+                      borderRadius: 5,
                     }}
                   >
                     Хасах
@@ -335,17 +339,17 @@ const EditLoanInformation = ({
           size={1}
           display="flex"
           alignItems="center"
-          ml={requirements.length === 1 ? -2 : 2}
+          ml={requirements.length === 1 ? -2 : -2}
         >
           <Button
             variant="contained"
             fullWidth
             onClick={handleAddRequirement}
             sx={{
-              height: "35px",
-              fontSize: 15,
-              fontWeight: "bold",
-              backgroundColor: "#05357E",
+              width: "100%",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
             }}
           >
             Нэмэх
@@ -363,10 +367,9 @@ const EditLoanInformation = ({
             fullWidth
             onClick={buttonHandle}
             sx={{
-              height: "35px",
-              fontSize: 15,
-              fontWeight: "bold",
-              backgroundColor: "#05357E",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
               width: "20%",
             }}
           >

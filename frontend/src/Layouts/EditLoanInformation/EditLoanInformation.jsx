@@ -89,7 +89,7 @@ const EditLoanInformation = () => {
       accessor: "name",
       flex: 3,
       headerAlign: "center",
-      contentAlign: "center",
+      contentAlign: "left",
       renderCell: (params) => {
         return <div style={{ marginLeft: 12 }}>{params.name}</div>;
       },
@@ -99,15 +99,9 @@ const EditLoanInformation = () => {
       accessor: "date",
       flex: 2,
       headerAlign: "center",
-      contentAlign: "center",
+      contentAlign: "left",
       renderCell: (params) => {
-        const bank = bankOptions?.find((item) => {
-          const match =
-            item._id.toString() === params.bankCategories?.toString();
-          return match;
-        });
-
-        return bank?.CategoryName || "-";
+        return params?.bankCategories?.CategoryName || "-";
       },
     },
     {
@@ -115,7 +109,7 @@ const EditLoanInformation = () => {
       accessor: "day",
       flex: 2,
       headerAlign: "center",
-      contentAlign: "center",
+      contentAlign: "left",
       renderCell: (params) => {
         const bank = loanOptions?.find((item) => {
           const match =
@@ -240,7 +234,6 @@ const EditLoanInformation = () => {
               fontWeight: "bold",
               color: "white",
               bgcolor: "#3166cc",
-              //   border: "1px solid blue",
               borderRadius: 5,
             }}
             onClick={() => {

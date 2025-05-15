@@ -170,6 +170,12 @@ const LoanAmountCalculater = () => {
           fullWidth
           onClick={buttonHandle}
           disabled={!loanAmount || !loanTerm || !intRate || !startDate}
+          sx={{
+            width: "100%",
+            color: "white",
+            bgcolor: "#3166cc",
+            borderRadius: 5,
+          }}
         >
           Тооцоолох
         </Button>

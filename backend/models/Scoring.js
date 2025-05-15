@@ -7,13 +7,13 @@ const ScoringSchema = new mongoose.Schema({
   loanHistory: {
     type: Number,
   },
+  paymentHistory: {
+    type: Number,
+  },
   availableLoanAmount: {
     type: Number,
   },
   loanHistoryLength: {
-    type: Number,
-  },
-  newLoanRequests: {
     type: Number,
   },
   DTI: {

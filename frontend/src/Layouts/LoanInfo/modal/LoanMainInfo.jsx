@@ -9,8 +9,6 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [con, setCon] = useState([]);
   const [tabValue, setTabValue] = useState(0);
   const [isRequirementAvailable, setIsRequirementAvailable] = useState(false);
-  const [isScoringExist, setIsScoringExist] = useState(false);
-
   useEffect(() => {
     GetLoanDataById(id).then((data) => {
       if (data) {
@@ -24,14 +22,6 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
       }
     });
   }, [id]);
-
-  useEffect(() => {
-    if (customerData && customerData.Scoring) {
-      setIsScoringExist(true);
-    } else {
-      setIsScoringExist(false);
-    }
-  }, [customerData]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -230,11 +220,16 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
           )}
         </>
       )}
-      {isRequirementAvailable && isScoringExist && (
+      {isRequirementAvailable && (
         <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
           <Button
             variant={"contained"}
-            sx={{ fontWeight: "bold", height: "35px", bgcolor: "#05357E" }}
+            sx={{
+              width: "25%",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
+            }}
             onClick={onClose}
           >
             Хүсэлт үүсгэх

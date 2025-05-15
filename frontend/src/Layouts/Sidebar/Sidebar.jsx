@@ -24,6 +24,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import PlagiarismIcon from "@mui/icons-material/Plagiarism";
 import ContentPasteIcon from "@mui/icons-material/ContentPaste";
 import CreditScoreIcon from "@mui/icons-material/CreditScore";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 function Sidebar() {
   const navigate = useNavigate();
@@ -190,15 +191,15 @@ function Sidebar() {
                 />
               </ListItemButton>
             </ListItem>
-            {/* <ListItem key={"Зээлийн эрсдэл"} disablePadding>
-              <ListItemButton component={Link} to="/editRequirement">
+            <ListItem key={"Зээлийн хүсэлт"} disablePadding>
+              <ListItemButton component={Link} to="/loanRequest">
                 <ListItemIcon
                   sx={{
                     color: "white",
                     paddingLeft: isSidebarOpen ? 1 : 0,
                   }}
                 >
-                  <PolicyIcon fontSize="medium" />
+                  <ListAltIcon fontSize="medium" />
                 </ListItemIcon>
                 <ListItemText
                   sx={{ color: "white" }}
@@ -206,10 +207,10 @@ function Sidebar() {
                     fontSize: 14,
                     color: "white",
                   }}
-                  primary={"Зээлийн эрсдэл"}
+                  primary={"Зээлийн хүсэлт"}
                 />
               </ListItemButton>
-            </ListItem> */}
+            </ListItem>
           </List>
         </Box>
         <Box paddingLeft={3}>
@@ -246,7 +247,7 @@ function Sidebar() {
         <Box sx={{ width: 280 }} role="presentation">
           <List>
             {/* zeeliin juram */}
-            <ListItem key={"Зээлийн журам"} disablePadding>
+            {/* <ListItem key={"Зээлийн журам"} disablePadding>
               <ListItemButton component={Link} to="/loanProcedure">
                 <ListItemIcon
                   sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
@@ -262,9 +263,9 @@ function Sidebar() {
                   primary={"Зээлийн журам"}
                 />
               </ListItemButton>
-            </ListItem>
+            </ListItem> */}
             {/* zeeliin ereltiin tailan */}
-            <ListItem key={"Зээлийн эрэлтийн тайлан"} disablePadding>
+            <ListItem key={"Зээлийн эрэлтийн мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/loanProcedure">
                 <ListItemIcon
                   sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
@@ -276,13 +277,14 @@ function Sidebar() {
                   primaryTypographyProps={{
                     fontSize: 14,
                     color: "white",
+                    width: "80%",
                   }}
-                  primary={"Зээлийн эрэлтийн тайлан"}
+                  primary={"Зээлийн эрэлтийн мэдээлэл"}
                 />
               </ListItemButton>
             </ListItem>
             {/* jurmiin biyleltiin tailan */}
-            <ListItem key={"Журмын биелэлтийн тайлан"} disablePadding>
+            <ListItem key={"Журмын биелэлтийн мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/procedureReport">
                 <ListItemIcon
                   sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
@@ -294,8 +296,9 @@ function Sidebar() {
                   primaryTypographyProps={{
                     fontSize: 14,
                     color: "white",
+                    width: "90%",
                   }}
-                  primary={"Журмын биелэлтийн тайлан"}
+                  primary={"Журмын биелэлтийн мэдээлэл"}
                 />
               </ListItemButton>
             </ListItem>

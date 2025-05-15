@@ -207,10 +207,10 @@ const RegisterLoanInfo = ({ handleClose, loanOptions, bankOptions }) => {
             fullWidth
             onClick={handleAddField}
             sx={{
-              height: "40px",
-              fontSize: 15,
               fontWeight: "bold",
-              backgroundColor: "#05357E",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
             }}
           >
             Нэмэх
@@ -240,10 +240,10 @@ const RegisterLoanInfo = ({ handleClose, loanOptions, bankOptions }) => {
             fullWidth
             onClick={handleAddRequirement}
             sx={{
-              height: "40px",
-              fontSize: 15,
               fontWeight: "bold",
-              backgroundColor: "#05357E",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
             }}
           >
             Нэмэх
@@ -255,9 +255,10 @@ const RegisterLoanInfo = ({ handleClose, loanOptions, bankOptions }) => {
             variant="contained"
             sx={{
               width: "20%",
-              backgroundColor: "#05357E",
-              fontSize: 15,
               fontWeight: "bold",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
             }}
             onClick={buttonHandle}
           >

@@ -5,7 +5,6 @@ const CustomerModel = require("../models/Customer");
 const CreditDatabaseModel = require("../models/CreditDatabase");
 const SocialInsuranceModel = require("../models/SocialInsurance");
 const CustomerMainInformationModel = require("../models/CustomerMainInformation");
-const LoanInstitutionRequestHistoryModel = require("../models/LoanInstitution");
 const DirectoryModel = require("../models/PhoneNumberDirectory");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -17,9 +16,7 @@ router.get("/getAll", async (req, res) => {
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory")
-      .populate("Scoring");
+      .populate("CustomerMainInformation");
 
     res.status(200).json(customers);
   } catch (error) {
@@ -37,9 +34,7 @@ router.get("/getById/:id", async (req, res) => {
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory")
-      .populate("Scoring");
+      .populate("CustomerMainInformation");
     if (!populatedCustomer) {
       return res.status(200).json(null);
     }
@@ -180,18 +175,11 @@ router.get("/getAllCreditDatabase", async (req, res) => {
 });
 
 router.post("/createCreditDatabase", async (req, res) => {
-  const {
-    currency,
-    firstLoanAmount,
-    interest,
-    payDate,
-    paidDate,
-    loanInstitution,
-    desc,
-  } = req.body;
+  const { currency, firstLoanAmount, interest, payDate, paidDate, desc } =
+    req.body;
 
   // Validate required fields
-  if (!currency || !firstLoanAmount || !payDate || !loanInstitution) {
+  if (!currency || !firstLoanAmount || !payDate) {
     return res.status(400).json({
       error:
         "currency, firstLoanAmount, payDate, and loanInstitution are required",
@@ -306,15 +294,15 @@ router.post("/registerSocailInsurance", async (req, res) => {
 router.get("/getAllById/:id", async (req, res) => {
   const { id } = req.params;
 
+  console.log(id);
+
   try {
     // Find the customer by ID and populate related models
     const customer = await CustomerModel.findById(id)
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory")
-      .populate("Scoring");
+      .populate("CustomerMainInformation");
 
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
@@ -531,36 +519,13 @@ router.post("/registerCustomerMainInformation", async (req, res) => {
       }
     }
 
-    // LoanInstitutionRequestHistory
-    if (Array.isArray(customerData.LoanInstitutionRequestHistory)) {
-      const historyIds = [];
-      for (const history of customerData.LoanInstitutionRequestHistory) {
-        if (history._id) {
-          const updated =
-            await LoanInstitutionRequestHistoryModel.findByIdAndUpdate(
-              history._id,
-              history,
-              { new: true }
-            );
-          historyIds.push(updated._id);
-        } else {
-          const created = await LoanInstitutionRequestHistoryModel.create(
-            history
-          );
-          historyIds.push(created._id);
-        }
-      }
-      customer.LoanInstitutionRequestHistory = historyIds;
-    }
-
     await customer.save();
 
     const populatedCustomer = await CustomerModel.findById(customer._id)
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory");
+      .populate("CustomerMainInformation");
 
     return res.status(200).json(populatedCustomer);
   } catch (e) {
@@ -572,9 +537,72 @@ router.post("/registerCustomerMainInformation", async (req, res) => {
 function monthsBetween(start, end) {
   const d1 = new Date(start);
   const d2 = new Date(end);
+  console.log(start);
+  console.log(end);
   return (
     (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth()
   );
+}
+
+const getAverageMonthlyDebt = (creditData) => {
+  const monthlyDebt = {};
+
+  creditData.forEach((loan) => {
+    const start = new Date(loan.payDate);
+    const end = loan.paidDate ? new Date(loan.paidDate) : new Date();
+    const balance = loan.balance || 0;
+
+    const current = new Date(start);
+
+    while (current <= end) {
+      const key = `${current.getFullYear()}-${String(
+        current.getMonth() + 1
+      ).padStart(2, "0")}`;
+
+      if (!monthlyDebt[key]) {
+        monthlyDebt[key] = 0;
+      }
+
+      monthlyDebt[key] += balance;
+
+      current.setMonth(current.getMonth() + 1);
+    }
+  });
+
+  const months = Object.keys(monthlyDebt);
+  const total = Object.values(monthlyDebt).reduce((sum, val) => sum + val, 0);
+  const average = months.length > 0 ? total / months.length : 0;
+
+  return average;
+};
+
+function daysToToday(dateString) {
+  const givenDate = new Date(dateString);
+  const today = new Date();
+
+  // Clear time portion for accurate day difference
+  givenDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffInMs = givenDate - today;
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  return diffInDays;
+}
+
+function getMaxLoanAmount(
+  monthlySalary,
+  dti = 0.4,
+  interestRate = 0.04,
+  termMonths = 36
+) {
+  const maxMonthlyPayment = monthlySalary * dti;
+  const monthlyRate = interestRate / 12;
+
+  const loanAmount =
+    (maxMonthlyPayment * (1 - Math.pow(1 + monthlyRate, -termMonths))) /
+    monthlyRate;
+  return Math.round(loanAmount);
 }
 
 router.post("/calculateScoring/:customerId", async (req, res) => {
@@ -583,26 +611,30 @@ router.post("/calculateScoring/:customerId", async (req, res) => {
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory");
+      .populate("CustomerMainInformation");
+
     if (!customer)
       return res.status(404).json({ message: "Customer not found" });
 
     const creditData = customer.CreditDatabase || [];
-    const loanRequests = customer.LoanInstitutionRequestHistory || [];
-    const incomeHistory = customer.SocialInsurance || [];
-
-    // 1. Зээлийн түүх: зээлийн тоо
+    const incomeHistoryies = customer.SocialInsurance || [];
+    const averageMonthlyIncome = incomeHistoryies.length
+      ? incomeHistoryies.reduce(
+          (sum, rec) => sum + (rec.salaryAmount || 0),
+          0
+        ) / incomeHistoryies.length
+      : 1000000;
     const loanHistory = creditData.length;
-
-    // 2. Одоогийн өрийн хэмжээ: төлөгдөөгүй зээлийн үлдэгдэл
-    const unpaidLoans = creditData.filter((cd) => cd.balance);
-    const totalDebt = unpaidLoans.reduce(
-      (sum, loan) => sum + (loan.balance || 0),
-      0
+    const unpaidLoans = creditData.filter(
+      (cd) => cd.balance && cd.balance > 0 && new Date(cd.paidDate) > new Date()
     );
-
-    // 3. Түүхийн урт: хамгийн эхний зээлээс өнөөдрийг хүртэлх сар
+    const totalDebt = unpaidLoans.reduce((sum, loan) => {
+      const days = daysToToday(loan.paidDate);
+      const months = Math.round(days / 30) || 1;
+      const adjustedBalance = loan.balance / months;
+      return sum + (isNaN(adjustedBalance) ? 0 : adjustedBalance);
+    }, 0);
+    const averageMonthlyDebt = getAverageMonthlyDebt(creditData);
     let loanHistoryLength = 0;
     if (creditData.length > 0) {
       const earliest = creditData.reduce((min, cur) =>
@@ -611,55 +643,52 @@ router.post("/calculateScoring/:customerId", async (req, res) => {
       loanHistoryLength = monthsBetween(earliest.payDate, new Date());
     }
 
-    // 4. Шинэ зээлийн хүсэлтүүд: сүүлийн 6 сард
-    const now = new Date();
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 6);
-    const newLoanRequests = loanRequests.filter(
-      (r) => new Date(r.date) >= sixMonthsAgo
-    ).length;
+    // 1. Төлбөрийн түүх (35%)
+    const latePayments = creditData.filter(
+      (loan) => loan.balance && new Date(loan.paidDate) > new Date()
+    );
+    const paymentHistoryRatio = 1 - latePayments.length / creditData.length;
+    const normalizedPaymentHistory = Math.max(paymentHistoryRatio, 0); // 0–1
 
-    // 5. DTI = нийт өр / дундаж цалин
-    const averageIncome = incomeHistory.length
-      ? incomeHistory.reduce((sum, rec) => sum + (rec.salaryAmount || 0), 0) /
-        incomeHistory.length
-      : 1000000;
-    const DTI = totalDebt / averageIncome;
+    // 2. Одоогийн өр / боломжит дээд зээл (30%)
+    const maxAffordableLoan = getMaxLoanAmount(averageMonthlyIncome); // your custom function
+    const normalizedDebt = 1 - Math.min(totalDebt / maxAffordableLoan, 1); // 0–1
 
-    const maxLoanHistory = 10; 
-    const maxDebt = 50000000; 
-    const maxLoanLength = 60; 
-    const maxNewRequests = 10;
-    const maxDTI = 2; 
+    // 3. DTI (15%)
+    const DTI = averageMonthlyDebt / averageMonthlyIncome;
+    console.log(averageMonthlyDebt, averageMonthlyIncome);
+    const normalizedDTI = 1 - Math.min(DTI, 1); // max DTI = 2.0
 
-    const normalizedLoanHistory = Math.min(loanHistory / maxLoanHistory, 1);
-    const normalizedDebt = 1 - Math.min(totalDebt / maxDebt, 1); 
-    const normalizedLoanLength = Math.min(loanHistoryLength / maxLoanLength, 1);
-    const normalizedNewRequests =
-      1 - Math.min(newLoanRequests / maxNewRequests, 1);
-    const normalizedDTI = 1 - Math.min(DTI / maxDTI, 1);
+    // 4. Зээлийн түүхийн урт (10%)
+    const normalizedLoanHistoryLength = Math.min(loanHistoryLength / 60, 1); // 5 жил = max
 
+    // 5. Зээлийн тоо (10%)
+    const normalizedLoanCount = Math.min(loanHistory / 10, 1); // max = 10 loans
+
+    // Нийт оноо (0–1 range)
     const score =
-      normalizedLoanHistory * 0.35 +
+      normalizedPaymentHistory * 0.35 +
       normalizedDebt * 0.3 +
-      normalizedLoanLength * 0.15 +
-      normalizedNewRequests * 0.1 +
-      normalizedDTI * 0.1;
+      normalizedDTI * 0.15 +
+      normalizedLoanHistoryLength * 0.1 +
+      normalizedLoanCount * 0.1;
 
-    const ficoScore = Math.round(300 + score * 550); 
+    // FICO загвар оноо (300–850)
+    const ficoScore = Math.round(300 + score * 550);
 
+    // Зээлийн оноог хадгалах
     const scoring = new Scoring({
       scoring: ficoScore,
-      loanHistory: normalizedLoanHistory * 0.35 * 550,
+      paymentHistory: normalizedPaymentHistory * 0.35 * 550,
       availableLoanAmount: normalizedDebt * 0.3 * 550,
-      loanHistoryLength: normalizedLoanLength * 0.15 * 550,
-      newLoanRequests: normalizedNewRequests * 0.1 * 550,
-      DTI: normalizedDTI * 0.1 * 550,
+      DTI: normalizedDTI * 0.15 * 550,
+      loanHistoryLength: normalizedLoanHistoryLength * 0.1 * 550,
+      loanHistory: normalizedLoanCount * 0.1 * 550,
     });
     customer.Scoring = scoring;
     await customer.save();
     await scoring.save();
-
+    x;
     return res.status(200).json(scoring);
   } catch (err) {
     console.error("Scoring calculation error:", err);

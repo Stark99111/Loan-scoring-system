@@ -4,7 +4,6 @@ import { Box, CssBaseline } from "@mui/material";
 import Sidebar from "./Layouts/Sidebar/Sidebar.jsx";
 import LoanInfo from "./Layouts/LoanInfo/LoanInfo.jsx";
 import RegisterLoan from "./Layouts/RegisterLoan/RegisterLoan.jsx";
-import LoanProcedure from "./Layouts/LoanProcedure/LoanProcedure.jsx";
 import ProcedureReport from "./Layouts/ProcedureReport/ProcedureReport.jsx";
 import Login from "./Layouts/Login/index.jsx";
 import RegisterLoanInfo from "./Layouts/EditLoanTab/RegisterLoanInfo/RegisterLoanInfo.jsx";
@@ -16,6 +15,7 @@ import Footer from "./Layouts/Footer/Footer.jsx";
 import EditLoanInformation from "./Layouts/EditLoanInformation/EditLoanInformation.jsx";
 import CalculateScoring from "./Layouts/ScoringTab/CalculateScoring/CalculateScoring.jsx";
 import Register from "./Layouts/Register/index.jsx";
+import LoanRequest from "./Layouts/LoanRequest/LoanRequest.jsx";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -62,11 +62,11 @@ const App = () => {
                   path="/editLoanInformation"
                   element={<EditLoanInformation />}
                 />
-                <Route path="/loanProcedure" element={<LoanProcedure />} />
                 <Route path="/procedureReport" element={<ProcedureReport />} />
                 <Route path="/registerLoan" element={<RegisterLoanInfo />} />
                 <Route path="/changeStatus" element={<ChangeStatus />} />
                 <Route path="/editRequirement" element={<EditRequirement />} />
+                <Route path="/loanRequest" element={<LoanRequest />} />
                 <Route
                   path="/loanAmountCalculater"
                   element={<LoanAmountCalculater />}

@@ -21,10 +21,6 @@ const CustomerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CustomerAddress",
   },
-  Scoring: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Scoring",
-  },
   CreditDatabase: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -41,12 +37,6 @@ const CustomerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CustomerMainInformation",
   },
-  LoanInstitutionRequestHistory: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "LoanInstitution",
-    },
-  ],
 });
 
 CustomerSchema.pre("save", async function (next) {

@@ -41,6 +41,15 @@ const LoanSchema = new mongoose.Schema({
   updatedDate: {
     type: mongoose.Schema.Types.Date,
   },
+  maxAmount: {
+    type: Number,
+  },
+  intRate: {
+    type: Number,
+  },
+  term: {
+    type: Number,
+  },
 });
 
 const LoanModel = mongoose.model("loan", LoanSchema);

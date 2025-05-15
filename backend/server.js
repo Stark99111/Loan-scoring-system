@@ -11,6 +11,7 @@ const categoryRoutes = require("./routes/CategoryRoutes");
 const requirementRoutes = require("./routes/RequirementRoutes");
 const customerRoutes = require("./routes/CustomerRoutes");
 const directoryRoutes = require("./routes/DirectoryRoutes");
+const loanRequestRoutes = require("./routes/LoanRequestRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/category", categoryRoutes);
 app.use("/requirement", requirementRoutes);
 app.use("/customer", customerRoutes);
 app.use("/directory", directoryRoutes);
+app.use("/loanRequest", loanRequestRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

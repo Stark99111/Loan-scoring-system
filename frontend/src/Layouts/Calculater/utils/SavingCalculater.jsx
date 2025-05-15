@@ -149,6 +149,15 @@ const SavingCalculater = () => {
             );
             setLoanAmountTableData(result);
           }}
+          sx={{
+            width: "100%",
+            color: "white",
+            bgcolor: "#3166cc",
+            borderRadius: 5,
+          }}
+          disabled={
+            !firstAmount || !intRatePerYear || !term || !addAmountEachMonth
+          }
         >
           Тооцоолох
         </Button>

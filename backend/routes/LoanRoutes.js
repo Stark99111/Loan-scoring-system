@@ -156,95 +156,97 @@ router.put("/update/:id/:status", async (req, res) => {
       reqDescriptions,
       conDescriptions,
       description,
+      maxAmount,
+      term,
+      intRate,
     } = req.body;
 
     const { id, status } = req.params;
 
     // Check for required fields
-    if (!name || !description || !categoryNums) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!name || !description) {
+      return res.status(400).json({ message: "Required fields are missing" });
     }
 
-    // Find the existing loan by its ID
+    // Find existing loan
     const existingLoan = await LoanModel.findById(id);
     if (!existingLoan) {
       return res.status(404).json({ message: "Loan not found" });
     }
 
-    let categories = "";
-    let conditions = [];
-    let requirements = [];
-    let bankCategories = "";
+    // Find loan category
+    let categories = existingLoan.loanCategories;
+    // if (categoryNums) {
+    //   const category = await CategoryModel.findOne({
+    //     CategoryCode: categoryNums,
+    //   });
+    //   if (!category)
+    //     return res.status(404).json({ message: "Loan category not found" });
+    //   categories = category;
+    // }
 
-    // Update categories if necessary
-    if (categoryNums) {
-      categories = await CategoryModel.findOne({ CategoryCode: categoryNums });
-      if (!categories) {
-        return res.status(404).json({ message: "Loan category not found" });
-      }
-    }
-
-    // Update bank categories if provided
+    // Find bank category
+    let bankCategories = existingLoan.bankCategories;
     if (bankCategoryNums) {
-      bankCategories = await CategoryModel.findOne({
+      const bankCategory = await CategoryModel.findOne({
         CategoryCode: bankCategoryNums,
       });
-
-      if (!bankCategories) {
+      if (!bankCategory)
         return res.status(404).json({ message: "Bank category not found" });
-      }
+      bankCategories = bankCategory;
     }
 
-    // Fetch conditions based on conDescriptions if they exist
+    // Process conditions
+    let conditions = existingLoan.conditions;
     if (Array.isArray(conDescriptions)) {
       const values = conDescriptions.map((item) => item.value);
       const conditionDescriptions = conDescriptions.map(
         (item) => item.condition
       );
-
-      conditions = await ConditionModel.find({
+      const foundConditions = await ConditionModel.find({
         conditionName: { $in: values },
         Description: { $in: conditionDescriptions },
       });
 
-      if (conditions.length !== conDescriptions.length) {
+      if (foundConditions.length !== conDescriptions.length) {
         return res.status(404).json({ message: "Some conditions not found" });
       }
+
+      conditions = foundConditions.map((c) => c._id);
     }
 
-    // Fetch requirements based on reqDescriptions if they exist
+    // Process requirements
+    let requirements = existingLoan.requirements;
     if (Array.isArray(reqDescriptions)) {
-      requirements = await RequirementModel.find({
+      const foundRequirements = await RequirementModel.find({
         requirementName: { $in: reqDescriptions },
       });
 
-      if (requirements.length !== reqDescriptions.length) {
+      if (foundRequirements.length !== reqDescriptions.length) {
         return res.status(404).json({ message: "Some requirements not found" });
       }
+
+      requirements = foundRequirements.map((r) => r._id);
     }
 
-    // Update the loan object with new data
-    existingLoan.name = name || existingLoan.name;
-    existingLoan.description = description || existingLoan.description;
-    existingLoan.loanCategories = categories || existingLoan.loanCategories;
+    // Update loan
+    existingLoan.name = name;
+    existingLoan.description = description;
+    existingLoan.loanCategories = categories;
+    existingLoan.bankCategories = bankCategories;
+    existingLoan.conditions = conditions;
+    existingLoan.requirements = requirements;
     existingLoan.status = status;
-    existingLoan.conditions = conditions.length
-      ? conditions.map((condition) => condition._id)
-      : existingLoan.conditions;
-    existingLoan.requirements = requirements.length
-      ? requirements.map((requirement) => requirement._id)
-      : existingLoan.requirements;
-    existingLoan.bankCategories = bankCategories || existingLoan.bankCategories;
-    existingLoan.updatedDate = new Date(); // Set updated date
+    existingLoan.maxAmount = maxAmount ?? existingLoan.maxAmount;
+    existingLoan.intRate = intRate ?? existingLoan.intRate;
+    existingLoan.term = term ?? existingLoan.term;
+    existingLoan.updatedDate = new Date();
 
-    // Save the updated loan
     const updatedLoan = await existingLoan.save();
     return res.status(200).json(updatedLoan);
   } catch (e) {
-    console.error("Error updating loan:", e); // Log error for debugging
-    res
-      .status(500)
-      .json({ error: "An error occurred while updating the loan" });
+    console.error("Error updating loan:", e);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -700,7 +702,6 @@ router.post("/checkLoanRequirements/:id", async (req, res) => {
       .populate("CreditDatabase")
       .populate("SocialInsurance")
       .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory")
       .populate("Scoring");
 
     if (!customer) {
@@ -838,9 +839,7 @@ router.get("/getCustomerFinancialInformation/:id", async (req, res) => {
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("LoanInstitutionRequestHistory")
-      .populate("Scoring");
+      .populate("CustomerMainInformation");
 
     if (!customer) {
       return res.status(404).json("Customer not found!");
