@@ -38,7 +38,6 @@ router.get("/getById/:id", async (req, res) => {
     if (!populatedCustomer) {
       return res.status(200).json(null);
     }
-    console.log(populatedCustomer);
 
     return res.status(200).json(populatedCustomer);
   } catch (error) {
@@ -294,8 +293,6 @@ router.post("/registerSocailInsurance", async (req, res) => {
 router.get("/getAllById/:id", async (req, res) => {
   const { id } = req.params;
 
-  console.log(id);
-
   try {
     // Find the customer by ID and populate related models
     const customer = await CustomerModel.findById(id)
@@ -537,8 +534,6 @@ router.post("/registerCustomerMainInformation", async (req, res) => {
 function monthsBetween(start, end) {
   const d1 = new Date(start);
   const d2 = new Date(end);
-  console.log(start);
-  console.log(end);
   return (
     (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth()
   );
