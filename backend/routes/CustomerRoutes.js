@@ -828,10 +828,10 @@ function calculateDTI(customer, loanRequest) {
   }
 
   // 2. Add new loan request monthly payment
-  if (loanRequest && loanRequest.Customer) {
-    const loanAmount = loanRequest.Customer.LoanAmount || 0;
-    const term = loanRequest.Customer.Term || 0;
-    const interest = loanRequest.Customer.Interest || 0;
+  if (loanRequest && loanRequest) {
+    const loanAmount = loanRequest.LoanAmount || 0;
+    const term = loanRequest.Term || 0;
+    const interest = loanRequest.Interest || 0;
 
     if (loanAmount > 0 && term > 0) {
       // Simple interest: total = principal + (principal * rate * time)
@@ -867,8 +867,13 @@ router.post(
   "/calculateScoring/:customerId/:loanRequestId",
   async (req, res) => {
     try {
+      const { customerId, loanRequestId } = req.params;
+
+      // Get current date once
+      const now = new Date();
+
       // Populate all necessary fields
-      const customer = await CustomerModel.findById(req.params.customerId)
+      const customer = await CustomerModel.findById(customerId)
         .populate({
           path: "AddressInformation",
           populate: { path: "district", model: "category" },
@@ -877,9 +882,9 @@ router.post(
         .populate("SocialInsurance")
         .populate("CustomerMainInformation");
 
-      const loanRequest = await LoanRequestModel.findById(
-        req.params.loanRequestId
-      ).populate("Loan");
+      const loanRequest = await LoanRequestModel.findById(loanRequestId)
+        .populate("Loan")
+        .populate("Customer");
 
       if (!customer)
         return res.status(404).json({ message: "Customer not found" });
@@ -893,7 +898,52 @@ router.post(
         calculateBadQualityCreditHistory(customer);
       const loanHistoryScore = calculateLoanHistory(customer);
       const loanAmountScore = calculateMaxAmount(customer, loanRequest);
-      const dtiScore = calculateDTI(customer, loanRequest); // assumes returns score, not just percentage
+      const dtiScore = calculateDTI(customer, loanRequest);
+
+      // Salary calculation
+      let salary = 0;
+      const socialInsurance = customer.SocialInsurance || [];
+      if (socialInsurance.length > 0) {
+        const sum = socialInsurance.reduce(
+          (acc, item) => acc + (item.salaryAmount || 0),
+          0
+        );
+        salary = sum / socialInsurance.length;
+      }
+
+      // Total monthly payment calculation
+      let totalMonthlyPayment = 0;
+
+      const creditDatabase = customer.CreditDatabase || [];
+      for (const loan of creditDatabase) {
+        const paidDate = new Date(loan.paidDate);
+        const balance = loan.balance || 0;
+
+        if (paidDate > now && balance > 0) {
+          const months =
+            (paidDate.getFullYear() - now.getFullYear()) * 12 +
+            (paidDate.getMonth() - now.getMonth());
+
+          if (months > 0) {
+            totalMonthlyPayment += balance / months;
+          }
+        }
+      }
+
+      if (loanRequest && loanRequest.Customer) {
+        console.log(loanRequest.LoanAmount);
+        const loanAmount = loanRequest.LoanAmount || 0;
+        const term = loanRequest.Term || 0;
+        const interest = loanRequest.Interest || 0;
+
+        if (loanAmount > 0 && term > 0) {
+          // Simple interest: total = principal + (principal * rate * time)
+          const totalRepayment = loanAmount * (1 + (interest * term) / 100);
+          const monthlyRepayment = totalRepayment / term;
+
+          totalMonthlyPayment += monthlyRepayment;
+        }
+      }
 
       // Final score calculation
       const totalScore =
@@ -904,7 +954,7 @@ router.post(
         dtiScore +
         300; // base score
 
-      // Create and save scoring object
+      // Save scoring result
       const scoring = new ScoringModel({
         scoring: totalScore,
         customerInfoScore: customerMainInfoScore,
@@ -922,7 +972,9 @@ router.post(
       loanRequest.Scoring = scoring._id;
       await loanRequest.save();
 
-      return res.status(200).json(scoring);
+      return res
+        .status(200)
+        .json({ ...scoring.toObject(), salary, totalMonthlyPayment });
     } catch (err) {
       console.error("Scoring calculation error:", err);
       return res.status(500).json({ message: "Server error" });

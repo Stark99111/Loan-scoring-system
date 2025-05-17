@@ -702,8 +702,7 @@ router.post("/checkLoanRequirements/:loanRequestId", async (req, res) => {
       .populate("AddressInformation")
       .populate("CreditDatabase")
       .populate("SocialInsurance")
-      .populate("CustomerMainInformation")
-      .populate("Scoring");
+      .populate("CustomerMainInformation");
 
     if (!customer) {
       return res.status(404).json("Customer not found!");

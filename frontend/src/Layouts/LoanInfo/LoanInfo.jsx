@@ -58,7 +58,7 @@ const LoanInfo = () => {
   const [customerData, setCustomerData] = useState(null);
   const [customerCreditModal, setCustomerCreditModal] = useState(false);
   const [continueSnackBar, setContinueSnackBar] = useState(false);
-  const [registeredLoanRequest, setRegisterLoanRequest] = useState("")
+  const [registeredLoanRequest, setRegisterLoanRequest] = useState("");
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -113,6 +113,10 @@ const LoanInfo = () => {
     setLoanRIskModal(false);
   };
 
+  useEffect(() => {
+    console.log(registeredLoanRequest);
+  }, [registeredLoanRequest]);
+
   const renderTabContent = (filterCategoryId) => {
     const filteredData = filterCategoryId
       ? loanData.filter(
@@ -121,7 +125,6 @@ const LoanInfo = () => {
             item?.status === true
         )
       : loanData.filter((item) => item?.status === true);
-
 
     return (
       <Grid2 container gap={2} justifyContent={"space-around"}>
@@ -316,7 +319,7 @@ const LoanInfo = () => {
             title={"Зээлийн хүсэлт үүсгэх"}
             onClose={() => setCustomerCreditModal(false)}
           >
-            <Box sx={{ width: 800, borderRadius: 3 }}>
+            <Box sx={{ width: 1000, borderRadius: 3 }}>
               <RegisterLoanRequest
                 handleBackButton={() => {
                   setCustomerCreditModal(false);

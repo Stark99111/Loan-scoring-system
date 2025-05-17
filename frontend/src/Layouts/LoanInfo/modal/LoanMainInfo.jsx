@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Box, Typography, Tab, Tabs, Grid2, Button } from "@mui/material";
 import GetLoanDataById from "../../../api/GetLoanDataById";
 import Divider from "@mui/material/Divider";
+import ChecklistRtlIcon from "@mui/icons-material/ChecklistRtl";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [loan, setLoan] = useState();
@@ -128,8 +130,19 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
             },
           }}
         >
-          <Tab label="Зээлийн нөхцөл" sx={{ marginRight: 3 }} />
-          <Tab label="Тавигдах шаардлага" sx={{ marginLeft: 3 }} />
+          <Tab
+            icon={<ChecklistRtlIcon />}
+            iconPosition="start"
+            label="Зээлийн нөхцөл"
+            sx={{ marginRight: 5 }}
+            lab
+          />
+          <Tab
+            icon={<AssignmentIcon />}
+            iconPosition="start"
+            label="Тавигдах шаардлага"
+            sx={{ marginLeft: 1 }}
+          />
         </Tabs>
       </Grid2>
       <Grid2 size={12}></Grid2>
@@ -143,6 +156,7 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
                 <Grid2
                   size={6}
                   pr={10}
+                  pl={7}
                   alignItems={"center"}
                   container
                   flexDirection={"row"}
@@ -169,7 +183,7 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
                     {item.Description}
                   </Typography>
                 </Grid2>
-                <Grid2 size={12} paddingRight={6}>
+                <Grid2 size={12} paddingRight={4} paddingLeft={4}>
                   <Divider />
                 </Grid2>
               </>
@@ -193,6 +207,7 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
                   size={12}
                   p={1}
                   pr={10}
+                  pl={7}
                   alignItems={"center"}
                   container
                   flexDirection={"row"}
@@ -204,11 +219,12 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
                       fontWeight: "600",
                       color: "#787b80",
                     }}
+                    textAlign={"justify"}
                   >
                     {index + 1 + ". " + item.requirementName}
                   </Typography>
                 </Grid2>
-                <Grid2 size={12} paddingRight={9}>
+                <Grid2 size={12} paddingRight={9} paddingLeft={7}>
                   <Divider />
                 </Grid2>
               </>
