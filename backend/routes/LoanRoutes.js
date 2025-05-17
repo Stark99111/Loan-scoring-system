@@ -8,6 +8,7 @@ const CustomerModel = require("../models/Customer");
 const mongoose = require("mongoose");
 const CreditDatabaseModel = require("../models/CreditDatabase");
 const SocialInsuranceModel = require("../models/SocialInsurance");
+const LoanRequestModel = require("../models/LoanRequest");
 
 router.get("/", async (req, res) => {
   try {
@@ -692,9 +693,9 @@ router.delete("/requirement/delete/:id", async (req, res) => {
   }
 });
 
-router.post("/checkLoanRequirements/:id", async (req, res) => {
+router.post("/checkLoanRequirements/:loanRequestId", async (req, res) => {
   try {
-    const loanId = req.params.id;
+    const loanRequestId = req.params.loanRequestId;
     const userId = req.body.userId;
 
     const customer = await CustomerModel.findById(userId)
@@ -708,9 +709,18 @@ router.post("/checkLoanRequirements/:id", async (req, res) => {
       return res.status(404).json("Customer not found!");
     }
 
-    const loan = await LoanModel.findById(loanId)
-      .populate("requirements")
-      .populate("conditions");
+    const loanRequest = await LoanRequestModel.findById(loanRequestId)
+      .populate("Scoring")
+      .populate({
+        path: "Loan",
+        populate: [{ path: "requirements" }, { path: "conditions" }],
+      });
+
+    if (!loanRequest) {
+      return res.status(400).json("Loan request not found");
+    }
+
+    const loan = loanRequest.Loan;
 
     if (!loan) {
       return res.status(404).json("Loan not found!");
@@ -785,7 +795,7 @@ router.post("/checkLoanRequirements/:id", async (req, res) => {
           break;
         }
         case "4": {
-          const ficoScore = customer.Scoring?.scoring || 0;
+          const ficoScore = loanRequest.Scoring?.scoring || 0;
           returnValue.push({
             id: element._id,
             requirement: element.requirementName,

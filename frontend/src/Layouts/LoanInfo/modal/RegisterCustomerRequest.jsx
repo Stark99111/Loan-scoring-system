@@ -166,8 +166,6 @@ const RegisterCustomerRequest = ({
       contentAlign: "center",
     },
   ];
-
-  // useEffect(() => {
   //   const duration = 4000;
   //   const interval = 100;
   //   const step = 100 / (duration / interval); // → 2.5 per 100ms
@@ -201,7 +199,7 @@ const RegisterCustomerRequest = ({
       }
     );
     if (status === 200) {
-      setRegisterLoanRequest(data);
+      setRegisterLoanRequest(data.request);
       handleOpenCredit();
     }
   };

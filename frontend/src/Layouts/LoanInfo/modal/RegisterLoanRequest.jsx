@@ -26,6 +26,7 @@ const RegisterLoanRequest = ({
   const [customerCredit, setCustomerCredit] = useState();
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [scoringData, setScoringData] = useState(null);
 
   useEffect(() => {
     if (customerData) {
@@ -58,6 +59,35 @@ const RegisterLoanRequest = ({
 
     return () => clearInterval(interval);
   }, [loading]);
+
+  const checkRequerement = async () => {
+    const { status, data } = await axios.post(
+      `http://localhost:5000/loan/checkLoanRequirements/${registeredLoanRequest._id}`,
+      {
+        userId: customerData._id,
+      }
+    );
+    if (status === 200) {
+      console.log(data);
+    }
+  };
+
+  useEffect(() => {
+    const fetchScoringData = async () => {
+      const { status, data } = await axios.post(
+        `http://localhost:5000/customer/calculateScoring/${customerData._id}/${registeredLoanRequest._id}`
+      );
+
+      if (status === 200) {
+        setScoringData(data);
+      }
+    };
+    if (customerData && registeredLoanRequest) {
+      console.log(registeredLoanRequest);
+      fetchScoringData();
+      checkRequerement();
+    }
+  }, [customerData, registeredLoanRequest]);
 
   const columns = [
     {

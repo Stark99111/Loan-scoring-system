@@ -292,6 +292,7 @@ const MainInformation = ({ onClose }) => {
     calculateScoring();
   };
 
+
   return (
     <Box>
       <Grid2 container gap={3}>
@@ -458,13 +459,7 @@ const MainInformation = ({ onClose }) => {
                 size="small"
                 label="Баг/дүүрэг"
                 InputLabelProps={{ shrink: true }}
-                value={AddressInformation?.district}
-                onChange={(e) => {
-                  setAddressInformation({
-                    ...AddressInformation,
-                    district: e.target.value,
-                  });
-                }}
+                value={AddressInformation?.district.CategoryName}
               />
             </Grid2>
             <Grid2 size={3}>

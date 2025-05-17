@@ -24,3 +24,6 @@ const SocialInsuranceModel = mongoose.model(
 );
 
 module.exports = SocialInsuranceModel;
+
+
+

@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    const { CategoryCode, CategoryName, Description } = req.body;
+    const { CategoryCode, CategoryName, Description, Value } = req.body;
 
     const existedCategory = await CategoryModel.findOne({
       CategoryCode: CategoryCode,
@@ -36,6 +36,7 @@ router.post("/register", async (req, res) => {
       CategoryCode,
       CategoryName,
       Description,
+      Value,
     });
 
     const savedCategory = await newCategory.save();

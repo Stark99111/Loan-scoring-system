@@ -4,18 +4,23 @@ const ScoringSchema = new mongoose.Schema({
   scoring: {
     type: Number,
   },
-  loanHistory: {
+  //Хэрэглэгчийн мэдээлэл
+  customerInfoScore: {
     type: Number,
   },
+  //чанаргүй зээл
   paymentHistory: {
     type: Number,
   },
+  //нийт зээлийн үлдэгдэл
   availableLoanAmount: {
     type: Number,
   },
+  //Зээлийн түүхийн урт
   loanHistoryLength: {
     type: Number,
   },
+  //өр орлогын харьцаа DTI
   DTI: {
     type: Number,
   },

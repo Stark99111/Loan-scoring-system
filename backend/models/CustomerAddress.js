@@ -9,8 +9,8 @@ const CustomerAddressSchema = new mongoose.Schema({
     type: String,
   },
   district: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "category",
   },
   street: {
     type: String,

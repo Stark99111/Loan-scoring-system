@@ -23,6 +23,12 @@ const CustomerMainInformationSchema = new mongoose.Schema({
   nation: {
     type: String,
   },
+  education: {
+    type: String,
+  },
+  isMarriage: {
+    type: Boolean,
+  },
 });
 
 module.exports = mongoose.model(

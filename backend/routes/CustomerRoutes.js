@@ -9,6 +9,9 @@ const DirectoryModel = require("../models/PhoneNumberDirectory");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Scoring = require("../models/Scoring");
+const CategoryModel = require("../models/Category");
+const LoanRequestModel = require("../models/LoanRequest");
+const ScoringModel = require("../models/Scoring");
 
 router.get("/getAll", async (req, res) => {
   try {
@@ -136,31 +139,53 @@ router.get("/getCusAssById/:id", async (req, res) => {
 });
 
 router.post("/registerCustomerAddress", async (req, res) => {
-  const { country, city, district, street, number, typeOfSeat } = req.body;
-
-  // Validate required fields
-  if (!country || !district) {
-    return res
-      .status(400)
-      .json({ error: " country, and district are required" });
-  }
-
   try {
-    // Create a new address
-    const newAddress = new CustomerAddressModel({
-      country,
-      city,
-      district,
-      street,
-      number,
-      typeOfSeat,
-    });
+    const { id, country, city, district, street, number, typeOfSeat } =
+      req.body;
 
-    // Save the address to the database
-    await newAddress.save();
-    res.status(201).json(newAddress);
+    if (!district) {
+      return res.status(400).json({ error: "District is required" });
+    }
+
+    // Category шалгах
+    const dist = await CategoryModel.findById(district);
+    if (!dist) {
+      return res.status(404).json({ error: "District not found" });
+    }
+
+    if (id) {
+      // Хаяг шинэчлэх
+      const customerAddress = await CustomerAddressModel.findById(id);
+      if (!customerAddress) {
+        return res.status(404).json({ error: "Customer address not found" });
+      }
+
+      customerAddress.country = country || customerAddress.country;
+      customerAddress.city = city || customerAddress.city;
+      customerAddress.district = dist._id;
+      customerAddress.street = street || customerAddress.street;
+      customerAddress.number = number || customerAddress.number;
+      customerAddress.typeOfSeat = typeOfSeat || customerAddress.typeOfSeat;
+
+      await customerAddress.save();
+      return res.status(200).json(customerAddress);
+    } else {
+      // Хаяг шинээр үүсгэх
+      const newAddress = new CustomerAddressModel({
+        country,
+        city,
+        district: dist._id,
+        street,
+        number,
+        typeOfSeat,
+      });
+
+      await newAddress.save();
+      return res.status(201).json(newAddress);
+    }
   } catch (error) {
-    res.status(500).json({ error: "Failed to create address" });
+    console.error("Error in registerCustomerAddress:", error);
+    res.status(500).json({ error: "Failed to create or update address" });
   }
 });
 
@@ -262,31 +287,69 @@ router.get("/getAllSocialInsurance", async (req, res) => {
   }
 });
 
-router.post("/registerSocailInsurance", async (req, res) => {
-  const { amount, institute, paidDate } = req.body;
+router.post("/registerSocialInsurance", async (req, res) => {
+  const { id, records } = req.body;
 
-  // Validate required fields
-  if (!amount || !institute || !paidDate) {
+  if (!id || !Array.isArray(records) || records.length === 0) {
     return res
       .status(400)
-      .json({ error: "amount, institute, and paidDate are required" });
+      .json({ error: "id and non-empty records array are required" });
   }
 
   try {
-    // Create a new social insurance record
-    const newSocialInsurance = new SocialInsuranceModel({
-      amount,
-      institute,
-      paidDate,
-    });
+    const customer = await CustomerModel.findById(id);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
 
-    // Save the record to the database
-    await newSocialInsurance.save();
-    res.status(201).json(newSocialInsurance);
+    const socialInsuranceDocs = [];
+
+    for (const record of records) {
+      const { amount, institute, paidDate, salaryAmount, instituteCode } =
+        record;
+
+      if (!amount || !institute || !paidDate) {
+        return res.status(400).json({
+          error: "Each record must include amount, institute, and paidDate",
+        });
+      }
+
+      // Optionally validate date format:
+      if (isNaN(Date.parse(paidDate))) {
+        return res
+          .status(400)
+          .json({ error: `Invalid paidDate format: ${paidDate}` });
+      }
+
+      const newSocialInsurance = new SocialInsuranceModel({
+        amount,
+        institute,
+        paidDate: new Date(paidDate),
+        salaryAmount,
+        instituteCode,
+      });
+
+      await newSocialInsurance.save();
+      socialInsuranceDocs.push(newSocialInsurance._id);
+    }
+
+    // Append new social insurance IDs instead of replacing (optional)
+    if (!Array.isArray(customer.SocialInsurance)) {
+      customer.SocialInsurance = [];
+    }
+    customer.SocialInsurance.push(...socialInsuranceDocs);
+
+    await customer.save();
+
+    res.status(201).json({
+      message: "Social insurance records registered",
+      records: socialInsuranceDocs,
+    });
   } catch (error) {
+    console.error("Error registering social insurance:", error);
     res
       .status(500)
-      .json({ error: "Failed to register social insurance record" });
+      .json({ error: "Failed to register social insurance records" });
   }
 });
 
@@ -296,7 +359,13 @@ router.get("/getAllById/:id", async (req, res) => {
   try {
     // Find the customer by ID and populate related models
     const customer = await CustomerModel.findById(id)
-      .populate("AddressInformation")
+      .populate({
+        path: "AddressInformation",
+        populate: {
+          path: "district",
+          model: "category",
+        },
+      })
       .populate("CreditDatabase")
       .populate("SocialInsurance")
       .populate("CustomerMainInformation");
@@ -531,164 +600,334 @@ router.post("/registerCustomerMainInformation", async (req, res) => {
   }
 });
 
-function monthsBetween(start, end) {
-  const d1 = new Date(start);
-  const d2 = new Date(end);
-  return (
-    (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth()
-  );
+function calculateScoringByCustomerMainInfo(customer) {
+  let workYearsScore = 0;
+  let education = 0;
+  let distructAddress = 0;
+  let isMarriage = customer.CustomerMainInformation?.isMarriage ? 1 : 0;
+  let ageScore = 0;
+
+  // Work years
+  if (customer.SocialInsurance && customer.SocialInsurance.length > 0) {
+    let firstDate = new Date(customer.SocialInsurance[0].paidDate);
+
+    customer.SocialInsurance.forEach((item) => {
+      const paidDate = new Date(item.paidDate);
+      if (paidDate < firstDate) {
+        firstDate = paidDate;
+      }
+    });
+
+    const now = new Date();
+    const diffInMilliseconds = now - firstDate;
+    const diffInYears = diffInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
+
+    if (diffInYears > 15) {
+      workYearsScore = 4;
+    } else if (diffInYears > 10) {
+      workYearsScore = 3;
+    } else if (diffInYears > 5) {
+      workYearsScore = 2;
+    } else if (diffInYears > 0) {
+      workYearsScore = 1;
+    }
+  }
+
+  // Education
+  const edu = customer.CustomerMainInformation?.education;
+  if (edu) {
+    switch (edu.toLowerCase()) {
+      case "доктор":
+        education = 5;
+        break;
+      case "мастер":
+        education = 4;
+        break;
+      case "баклавр":
+        education = 3;
+        break;
+      case "бүрэн дунд":
+        education = 2;
+        break;
+      default:
+        education = 1;
+    }
+  }
+
+  // District
+  const district = customer.AddressInformation?.district?.Value;
+  if (district) {
+    switch (district) {
+      case "A":
+        distructAddress = 3;
+        break;
+      case "B":
+        distructAddress = 2;
+        break;
+      case "C":
+        distructAddress = 1;
+        break;
+      default:
+        distructAddress = 0;
+    }
+  }
+
+  // Age
+  let age = 0;
+  if (customer.CustomerMainInformation?.bornDate) {
+    const birthDate = new Date(customer.CustomerMainInformation.bornDate);
+    const today = new Date();
+    age =
+      today.getFullYear() -
+      birthDate.getFullYear() -
+      (today <
+      new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+        ? 1
+        : 0);
+
+    if (age >= 40 && age <= 50) {
+      ageScore = 3;
+    } else if (age > 50) {
+      ageScore = 2;
+    } else if (age >= 30 && age < 40) {
+      ageScore = 4;
+    } else if (age >= 20 && age < 30) {
+      ageScore = 1;
+    } else {
+      ageScore = 0;
+    }
+  }
+
+  const totalScore =
+    (workYearsScore + ageScore + distructAddress + education + isMarriage) *
+    4.85;
+  return Math.floor(totalScore);
 }
 
-const getAverageMonthlyDebt = (creditData) => {
-  const monthlyDebt = {};
+function calculateBadQualityCreditHistory(customer) {
+  if (!customer.CreditDatabase || !Array.isArray(customer.CreditDatabase)) {
+    return 0;
+  }
 
-  creditData.forEach((loan) => {
-    const start = new Date(loan.payDate);
-    const end = loan.paidDate ? new Date(loan.paidDate) : new Date();
-    const balance = loan.balance || 0;
+  const now = new Date();
+  const filtered = customer.CreditDatabase.filter(
+    (item) => new Date(item.paidDate) > now && item.balance > 0
+  );
 
-    const current = new Date(start);
+  const length = filtered.length;
+  let number = 0;
 
-    while (current <= end) {
-      const key = `${current.getFullYear()}-${String(
-        current.getMonth() + 1
-      ).padStart(2, "0")}`;
+  if (length >= 5) {
+    number = 0;
+  } else if (length === 4) {
+    number = 1;
+  } else if (length === 3) {
+    number = 2;
+  } else if (length === 2) {
+    number = 3;
+  } else if (length === 1) {
+    number = 4;
+  } else {
+    number = 5;
+  }
 
-      if (!monthlyDebt[key]) {
-        monthlyDebt[key] = 0;
-      }
+  return number * 22;
+}
 
-      monthlyDebt[key] += balance;
+function calculateLoanHistory(customer) {
+  if (!customer.CreditDatabase || customer.CreditDatabase.length === 0) {
+    return 55;
+  }
 
-      current.setMonth(current.getMonth() + 1);
+  let firstDate = new Date(customer.CreditDatabase[0].payDate);
+  customer.CreditDatabase.forEach((item) => {
+    const payDate = new Date(item.payDate);
+    if (payDate < firstDate) {
+      firstDate = payDate;
     }
   });
 
-  const months = Object.keys(monthlyDebt);
-  const total = Object.values(monthlyDebt).reduce((sum, val) => sum + val, 0);
-  const average = months.length > 0 ? total / months.length : 0;
+  const now = new Date();
+  const diffInMilliseconds = now - firstDate;
+  const diffInYears = Math.floor(
+    diffInMilliseconds / (1000 * 60 * 60 * 24 * 365.25)
+  );
 
-  return average;
-};
+  let number = 0;
 
-function daysToToday(dateString) {
-  const givenDate = new Date(dateString);
-  const today = new Date();
-
-  // Clear time portion for accurate day difference
-  givenDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const diffInMs = givenDate - today;
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  return diffInDays;
-}
-
-function getMaxLoanAmount(
-  monthlySalary,
-  dti = 0.4,
-  interestRate = 0.04,
-  termMonths = 36
-) {
-  const maxMonthlyPayment = monthlySalary * dti;
-  const monthlyRate = interestRate / 12;
-
-  const loanAmount =
-    (maxMonthlyPayment * (1 - Math.pow(1 + monthlyRate, -termMonths))) /
-    monthlyRate;
-  return Math.round(loanAmount);
-}
-
-router.post("/calculateScoring/:customerId", async (req, res) => {
-  try {
-    const customer = await CustomerModel.findById(req.params.customerId)
-      .populate("AddressInformation")
-      .populate("CreditDatabase")
-      .populate("SocialInsurance")
-      .populate("CustomerMainInformation");
-
-    if (!customer)
-      return res.status(404).json({ message: "Customer not found" });
-
-    const creditData = customer.CreditDatabase || [];
-    const incomeHistoryies = customer.SocialInsurance || [];
-    const averageMonthlyIncome = incomeHistoryies.length
-      ? incomeHistoryies.reduce(
-          (sum, rec) => sum + (rec.salaryAmount || 0),
-          0
-        ) / incomeHistoryies.length
-      : 1000000;
-    const loanHistory = creditData.length;
-    const unpaidLoans = creditData.filter(
-      (cd) => cd.balance && cd.balance > 0 && new Date(cd.paidDate) > new Date()
-    );
-    const totalDebt = unpaidLoans.reduce((sum, loan) => {
-      const days = daysToToday(loan.paidDate);
-      const months = Math.round(days / 30) || 1;
-      const adjustedBalance = loan.balance / months;
-      return sum + (isNaN(adjustedBalance) ? 0 : adjustedBalance);
-    }, 0);
-    const averageMonthlyDebt = getAverageMonthlyDebt(creditData);
-    let loanHistoryLength = 0;
-    if (creditData.length > 0) {
-      const earliest = creditData.reduce((min, cur) =>
-        new Date(cur.payDate) < new Date(min.payDate) ? cur : min
-      );
-      loanHistoryLength = monthsBetween(earliest.payDate, new Date());
-    }
-
-    // 1. Төлбөрийн түүх (35%)
-    const latePayments = creditData.filter(
-      (loan) => loan.balance && new Date(loan.paidDate) > new Date()
-    );
-    const paymentHistoryRatio = 1 - latePayments.length / creditData.length;
-    const normalizedPaymentHistory = Math.max(paymentHistoryRatio, 0); // 0–1
-
-    // 2. Одоогийн өр / боломжит дээд зээл (30%)
-    const maxAffordableLoan = getMaxLoanAmount(averageMonthlyIncome); // your custom function
-    const normalizedDebt = 1 - Math.min(totalDebt / maxAffordableLoan, 1); // 0–1
-
-    // 3. DTI (15%)
-    const DTI = averageMonthlyDebt / averageMonthlyIncome;
-    console.log(averageMonthlyDebt, averageMonthlyIncome);
-    const normalizedDTI = 1 - Math.min(DTI, 1); // max DTI = 2.0
-
-    // 4. Зээлийн түүхийн урт (10%)
-    const normalizedLoanHistoryLength = Math.min(loanHistoryLength / 60, 1); // 5 жил = max
-
-    // 5. Зээлийн тоо (10%)
-    const normalizedLoanCount = Math.min(loanHistory / 10, 1); // max = 10 loans
-
-    // Нийт оноо (0–1 range)
-    const score =
-      normalizedPaymentHistory * 0.35 +
-      normalizedDebt * 0.3 +
-      normalizedDTI * 0.15 +
-      normalizedLoanHistoryLength * 0.1 +
-      normalizedLoanCount * 0.1;
-
-    // FICO загвар оноо (300–850)
-    const ficoScore = Math.round(300 + score * 550);
-
-    // Зээлийн оноог хадгалах
-    const scoring = new Scoring({
-      scoring: ficoScore,
-      paymentHistory: normalizedPaymentHistory * 0.35 * 550,
-      availableLoanAmount: normalizedDebt * 0.3 * 550,
-      DTI: normalizedDTI * 0.15 * 550,
-      loanHistoryLength: normalizedLoanHistoryLength * 0.1 * 550,
-      loanHistory: normalizedLoanCount * 0.1 * 550,
-    });
-    customer.Scoring = scoring;
-    await customer.save();
-    await scoring.save();
-    x;
-    return res.status(200).json(scoring);
-  } catch (err) {
-    console.error("Scoring calculation error:", err);
-    return res.status(500).json({ message: "Server error" });
+  if (diffInYears >= 15) {
+    number = 5;
+  } else if (diffInYears >= 10) {
+    number = 4.5;
+  } else if (diffInYears >= 5) {
+    number = 4;
+  } else if (diffInYears > 0) {
+    number = 3;
+  } else {
+    number = 0;
   }
-});
+
+  return number * 22;
+}
+
+function calculateMaxAmount(customer) {
+  let salary = 0;
+  const months = 30;
+  const interestRateMonthly = 0.018;
+  const DTI = 0.4;
+  let creditAmount = 0;
+
+  if (customer.SocialInsurance && customer.SocialInsurance.length) {
+    let sum = 0;
+    customer.SocialInsurance.forEach((item) => (sum = sum + item.salaryAmount));
+
+    if (sum > 0) {
+      salary = sum / customer.SocialInsurance.length;
+    }
+  }
+  const maxAmount = salary * DTI;
+
+  const discountFactor =
+    (1 - Math.pow(1 + interestRateMonthly, -months)) / interestRateMonthly;
+  const maxLoanAmount = maxAmount * discountFactor;
+  console.log(maxLoanAmount);
+
+  if (customer.CreditDatabase && customer.CreditDatabase.length) {
+    const filtered = customer.CreditDatabase.filter(
+      (item) => new Date() < new Date(item.paidDate) && item.balance
+    );
+    filtered.every((item) => (creditAmount += item.balance));
+  }
+
+  const onePercent = maxLoanAmount / 100;
+  const loanPercent = (100 - creditAmount / onePercent) * 1.375;
+  return loanPercent;
+}
+
+function calculateDTI(customer, loanRequest) {
+  const now = new Date();
+  let totalMonthlyPayment = 0;
+
+  // 1. Active loan payments from CreditDatabase
+  if (customer.CreditDatabase && Array.isArray(customer.CreditDatabase)) {
+    for (const loan of customer.CreditDatabase) {
+      const paidDate = new Date(loan.paidDate);
+      const balance = loan.balance;
+
+      if (paidDate > now && balance > 0) {
+        const months =
+          (paidDate.getFullYear() - now.getFullYear()) * 12 +
+          (paidDate.getMonth() - now.getMonth());
+
+        if (months > 0) {
+          const monthlyPayment = balance / months;
+          totalMonthlyPayment += monthlyPayment;
+        }
+      }
+    }
+  }
+
+  // 2. Add new loan request monthly payment
+  if (loanRequest && loanRequest.Customer) {
+    const loanAmount = loanRequest.Customer.LoanAmount || 0;
+    const term = loanRequest.Customer.Term || 0;
+    const interest = loanRequest.Customer.Interest || 0;
+
+    if (loanAmount > 0 && term > 0) {
+      // Simple interest: total = principal + (principal * rate * time)
+      const totalRepayment = loanAmount * (1 + (interest * term) / 100);
+      const monthlyRepayment = totalRepayment / term;
+
+      totalMonthlyPayment += monthlyRepayment;
+    }
+  }
+
+  let salary = 0;
+  if (customer.SocialInsurance && customer.SocialInsurance.length) {
+    let sum = 0;
+    customer.SocialInsurance.forEach((item) => (sum = sum + item.salaryAmount));
+
+    if (sum > 0) {
+      salary = sum / customer.SocialInsurance.length;
+    }
+  }
+
+  const dti = (totalMonthlyPayment / salary) * 100;
+
+  console.log(dti);
+
+  if (dti <= 20) return 100 * 1.1;
+  else if (dti <= 30) return 80 * 1.1;
+  else if (dti <= 40) return 60 * 1.1;
+  else if (dti <= 50) return 40 * 1.1;
+  else return 20 * 1.1;
+}
+
+router.post(
+  "/calculateScoring/:customerId/:loanRequestId",
+  async (req, res) => {
+    try {
+      // Populate all necessary fields
+      const customer = await CustomerModel.findById(req.params.customerId)
+        .populate({
+          path: "AddressInformation",
+          populate: { path: "district", model: "category" },
+        })
+        .populate("CreditDatabase")
+        .populate("SocialInsurance")
+        .populate("CustomerMainInformation");
+
+      const loanRequest = await LoanRequestModel.findById(
+        req.params.loanRequestId
+      ).populate("Loan");
+
+      if (!customer)
+        return res.status(404).json({ message: "Customer not found" });
+      if (!loanRequest)
+        return res.status(404).json({ message: "Loan request not found" });
+
+      // Scoring calculations
+      const customerMainInfoScore =
+        calculateScoringByCustomerMainInfo(customer);
+      const badQualityCreditHistory =
+        calculateBadQualityCreditHistory(customer);
+      const loanHistoryScore = calculateLoanHistory(customer);
+      const loanAmountScore = calculateMaxAmount(customer, loanRequest);
+      const dtiScore = calculateDTI(customer, loanRequest); // assumes returns score, not just percentage
+
+      // Final score calculation
+      const totalScore =
+        customerMainInfoScore +
+        badQualityCreditHistory +
+        loanHistoryScore +
+        loanAmountScore +
+        dtiScore +
+        300; // base score
+
+      // Create and save scoring object
+      const scoring = new ScoringModel({
+        scoring: totalScore,
+        customerInfoScore: customerMainInfoScore,
+        availableLoanAmount: loanAmountScore,
+        paymentHistory: badQualityCreditHistory,
+        loanHistoryLength: loanHistoryScore,
+        DTI: dtiScore,
+        customer: customer._id,
+        loanRequest: loanRequest._id,
+      });
+
+      await scoring.save();
+
+      // Link scoring to loan request
+      loanRequest.Scoring = scoring._id;
+      await loanRequest.save();
+
+      return res.status(200).json(scoring);
+    } catch (err) {
+      console.error("Scoring calculation error:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 module.exports = router;
