@@ -579,16 +579,7 @@ const CalculateScoring = () => {
           )}
         </Grid2>
 
-        {/* Approval Modal */}
-        <CustomModal
-          open={approveModal}
-          onClose={() => setApproveModal(false)}
-          title="Зөвшөөрлийн хуудас"
-        >
-          <Box sx={{ width: 600, borderRadius: 3 }}>
-            <CalculateScoringData />
-          </Box>
-        </CustomModal>
+        
 
         {/* Main Info Modal */}
         <CustomModal

@@ -790,7 +790,6 @@ function calculateMaxAmount(customer) {
   const discountFactor =
     (1 - Math.pow(1 + interestRateMonthly, -months)) / interestRateMonthly;
   const maxLoanAmount = maxAmount * discountFactor;
-  console.log(maxLoanAmount);
 
   if (customer.CreditDatabase && customer.CreditDatabase.length) {
     const filtered = customer.CreditDatabase.filter(
@@ -854,8 +853,6 @@ function calculateDTI(customer, loanRequest) {
 
   const dti = (totalMonthlyPayment / salary) * 100;
 
-  console.log(dti);
-
   if (dti <= 20) return 100 * 1.1;
   else if (dti <= 30) return 80 * 1.1;
   else if (dti <= 40) return 60 * 1.1;
@@ -913,6 +910,7 @@ router.post(
 
       // Total monthly payment calculation
       let totalMonthlyPayment = 0;
+      let totalPayment = 0;
 
       const creditDatabase = customer.CreditDatabase || [];
       for (const loan of creditDatabase) {
@@ -926,21 +924,24 @@ router.post(
 
           if (months > 0) {
             totalMonthlyPayment += balance / months;
+            totalPayment += balance;
           }
         }
       }
 
       if (loanRequest && loanRequest.Customer) {
-        console.log(loanRequest.LoanAmount);
         const loanAmount = loanRequest.LoanAmount || 0;
         const term = loanRequest.Term || 0;
         const interest = loanRequest.Interest || 0;
 
         if (loanAmount > 0 && term > 0) {
+          const avgInterest = interest / 100 / 12;
           // Simple interest: total = principal + (principal * rate * time)
-          const totalRepayment = loanAmount * (1 + (interest * term) / 100);
-          const monthlyRepayment = totalRepayment / term;
-
+          const monthlyRepayment =
+            (loanAmount * avgInterest) / (1 - Math.pow(1 + avgInterest, -term));
+          totalPayment += monthlyRepayment * term;
+          console.log(monthlyRepayment);
+          console.log(monthlyRepayment * term);
           totalMonthlyPayment += monthlyRepayment;
         }
       }
@@ -972,9 +973,12 @@ router.post(
       loanRequest.Scoring = scoring._id;
       await loanRequest.save();
 
-      return res
-        .status(200)
-        .json({ ...scoring.toObject(), salary, totalMonthlyPayment });
+      return res.status(200).json({
+        ...scoring.toObject(),
+        salary,
+        totalMonthlyPayment,
+        totalPayment,
+      });
     } catch (err) {
       console.error("Scoring calculation error:", err);
       return res.status(500).json({ message: "Server error" });

@@ -132,7 +132,9 @@ const LoanRequest = ({}) => {
         `http://localhost:5000/LoanRequest/loanRequests/${userId}`
       );
       if (status === 200) {
-        const mapped = data.map((item, index) => ({ ...item, num: index }));
+        const mapped = data
+          .filter((item) => item.isVerification)
+          .map((item, index) => ({ ...item, num: index }));
         setTableData(mapped);
       }
     };

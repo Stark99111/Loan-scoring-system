@@ -130,26 +130,6 @@ function Sidebar() {
                 />
               </ListItemButton>
             </ListItem>
-            {/* <ListItem key={"Зээл бүртгэх"} disablePadding>
-              <ListItemButton component={Link} to="/createLoan">
-                <ListItemIcon
-                  sx={{
-                    color: "white",
-                    paddingLeft: isSidebarOpen ? 1 : 0,
-                  }}
-                >
-                  <LibraryAddIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Зээл бүртгэх"}
-                />
-              </ListItemButton>
-            </ListItem> */}
             <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
               {/* <ListItemButton component={Link} to="/registerLoan"> */}
               <ListItemButton component={Link} to="/editLoanInformation">
@@ -215,56 +195,11 @@ function Sidebar() {
         </Box>
         <Box paddingLeft={3}>
           <Typography color="white" fontSize={22}>
-            {isSidebarOpen ? "Скоринг" : "-"}
+            {isSidebarOpen ? "Лавлах  " : "-"}
           </Typography>
         </Box>
         <Box sx={{ width: 280 }} role="presentation">
           <List>
-            <ListItem key={"Тооцоолуур"} disablePadding>
-              <ListItemButton component={Link} to="/calculateScoring">
-                <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
-                >
-                  <CreditScoreIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Зэрэглэл"}
-                />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Box>
-        <Box paddingLeft={3}>
-          <Typography color="white" fontSize={22}>
-            {isSidebarOpen ? "Тайлан" : "-"}
-          </Typography>
-        </Box>
-        <Box sx={{ width: 280 }} role="presentation">
-          <List>
-            {/* zeeliin juram */}
-            {/* <ListItem key={"Зээлийн журам"} disablePadding>
-              <ListItemButton component={Link} to="/loanProcedure">
-                <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
-                >
-                  <ContentPasteIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Зээлийн журам"}
-                />
-              </ListItemButton>
-            </ListItem> */}
-            {/* zeeliin ereltiin tailan */}
             <ListItem key={"Зээлийн эрэлтийн мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/loanProcedure">
                 <ListItemIcon

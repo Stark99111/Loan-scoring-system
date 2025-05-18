@@ -4,10 +4,6 @@ import {
   Button,
   Typography,
   TextField,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
   Snackbar,
   Alert,
   CircularProgress,
@@ -18,7 +14,6 @@ import CustomDataGrid from "../../../Components/CustomDataGrid";
 import FormatNumber from "../../../Components/FormatNumber";
 import BalanceIcon from "@mui/icons-material/Balance";
 import RestoreIcon from "@mui/icons-material/Restore";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ScoringAdvice from "../../ScoringTab/CalculateScoring/tabs/ScoringAdvice";
 import PermIdentityIcon from "@mui/icons-material/PermIdentity";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -26,6 +21,10 @@ import { Doughnut } from "react-chartjs-2";
 import CustomModal from "../../../Components/CustomModal";
 import GppBadIcon from "@mui/icons-material/GppBad";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import ScoringList from "./ScoringList";
+import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const ScoreCard = ({
@@ -46,14 +45,14 @@ const ScoreCard = ({
       sx={{
         border: "1px solid #ccc",
         borderRadius: 2,
-        height: "120px",
+        height: "140px",
         backgroundColor: "#f9f9f9",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         px: 2,
         boxShadow: 1,
-        width: "32%",
+        width: "48.3%",
       }}
     >
       <Box display="flex" alignItems="center" mb={0.5}>
@@ -83,17 +82,17 @@ const ScoreCard = ({
 const options = {
   layout: {
     padding: {
-      right: 0, // Negative values are invalid, use 0 or adjust layout another way
+      right: 0,
     },
   },
   plugins: {
     legend: {
-      position: "top", // Places legend at the top
-      align: "center", // Aligns legend in the center
+      position: "top",
+      align: "center",
       labels: {
-        boxWidth: 20, // Smaller legend box
-        padding: 15, // Space between legend items
-        // textAlign: "flex-start", // Aligns text inside each item (valid here)
+        boxWidth: 20,
+        padding: 5,
+        usePointStyle: true,
       },
     },
   },
@@ -103,7 +102,6 @@ const RegisterLoanRequest = ({
   handleBackButton,
   registeredLoanRequest,
   customerData,
-  loanData,
   onClose,
 }) => {
   const [customerCredit, setCustomerCredit] = useState();
@@ -114,6 +112,10 @@ const RegisterLoanRequest = ({
   const [scoringAdviceModal, setScoringAdvice] = useState(false);
   const [data, setData] = useState();
   const [scoringDesc, setScoringDesc] = useState();
+  const [error, setError] = useState(false);
+  const [scoringList, setScoringList] = useState(false);
+  const [requirementData, setRequirementData] = useState(false);
+  const [isAgree, setIsAgree] = useState(false);
 
   const scoringCategory = [
     {
@@ -148,30 +150,30 @@ const RegisterLoanRequest = ({
     },
   ];
 
-  const scoringValueColumn = [
+  const loanReqColumn = [
     {
-      label: "Онооны хүрээ",
-      accessor: "numberValues",
+      label: "№",
+      accessor: "num",
       flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Шаардлага",
+      accessor: "requirement",
+      flex: 7,
+      headerAlign: "center",
+      // contentAlign: "center",
+    },
+    {
+      label: "Хангасан эсэх",
+      accessor: "value",
+      flex: 2,
       headerAlign: "center",
       contentAlign: "center",
       renderCell: (params) => {
-        return params.lowAmount + "-" + params.maxAmount;
+        return params.value ? "Тийм" : "Үгүй";
       },
-    },
-    {
-      label: "Зэрэглэл",
-      accessor: "text",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
-      label: "Тайлбар",
-      accessor: "desc",
-      flex: 4,
-      headerAlign: "center",
-      contentAlign: "justify",
     },
   ];
 
@@ -199,13 +201,11 @@ const RegisterLoanRequest = ({
         DTI: scoringData.DTI / (scoringData.scoring / 100),
       };
 
-      // Total weighted score
       const total = Object.values(weighted).reduce((sum, val) => sum + val, 0);
 
-      // Convert to percentage for the pie chart
       const pieData = Object.entries(weighted).map(([label, value]) => ({
         name: label,
-        value: parseFloat(((value / total) * 100).toFixed(1)), // convert to %
+        value: parseFloat(((value / total) * 100).toFixed(1)),
       }));
 
       console.log(pieData);
@@ -269,7 +269,7 @@ const RegisterLoanRequest = ({
           }
           return prev + 2;
         });
-      }, 80);
+      }, 60);
     }
 
     return () => clearInterval(interval);
@@ -282,8 +282,23 @@ const RegisterLoanRequest = ({
         userId: customerData._id,
       }
     );
+
     if (status === 200) {
-      console.log(data);
+      const mapped = data.map((item, index) => ({
+        ...item,
+        num: index + 1,
+      }));
+      setRequirementData(mapped);
+
+      const isUnderDTIRule =
+        (scoringData.totalMonthlyPayment / scoringData.salary) * 100 < 46;
+
+      const allTrue = mapped?.every((item) => item.value === true) ?? false;
+
+      console.log("DTI < 46:", isUnderDTIRule);
+      console.log("All values true:", allTrue);
+
+      setIsAgree(allTrue && isUnderDTIRule);
     }
   };
 
@@ -297,12 +312,17 @@ const RegisterLoanRequest = ({
         setScoringData(data);
       }
     };
-    if (customerData && registeredLoanRequest) {
+    if (customerData && registeredLoanRequest && registeredLoanRequest._id) {
       console.log(registeredLoanRequest);
       fetchScoringData();
-      checkRequerement();
     }
   }, [customerData, registeredLoanRequest]);
+
+  useEffect(() => {
+    if (scoringData) {
+      checkRequerement();
+    }
+  }, [scoringData]);
 
   useEffect(() => {
     const translations = {
@@ -330,6 +350,17 @@ const RegisterLoanRequest = ({
       setScoringDesc(mapped);
     }
   }, [scoringData]);
+
+  const buttonHandle = async () => {
+    const { status } = await axios.put(
+      `http://localhost:5000/loanRequest/isVerification/${registeredLoanRequest._id}`
+    );
+    if (status === 200) {
+      onClose();
+    } else {
+      setError(true);
+    }
+  };
 
   const columns = [
     {
@@ -383,26 +414,7 @@ const RegisterLoanRequest = ({
     },
   ];
 
-  // const registerLoanRequest = async () => {
-  //   const body = {
-  //     customerId: customerId,
-  //     loanId: loanData._id,
-  //     term: term,
-  //     int: interest,
-  //     amount: loanAmount,
-  //   };
-  //   const { status } = await axios.post(
-  //     "http://localhost:5000/LoanRequest/registerLoanRequest",
-  //     {
-  //       ...body,
-  //     }
-  //   );
-  //   if (status === 200) {
-  //     setTimeout(() => {
-  //       onClose();
-  //     }, 2000);
-  //   }
-  // };
+  useEffect(() => {});
 
   return (
     <>
@@ -423,10 +435,10 @@ const RegisterLoanRequest = ({
             <Typography variant="h6">{progress}%</Typography>
           </Grid2>
         </Grid2>
-      ) : (
+      ) : registeredLoanRequest._id ? (
         <div>
           <Grid2 container padding={1} spacing={2}>
-            <Grid2 size={4}>
+            <Grid2 size={3}>
               <TextField
                 size="small"
                 fullWidth
@@ -434,15 +446,23 @@ const RegisterLoanRequest = ({
                 value={FormatNumber(scoringData.salary)}
               />
             </Grid2>
-            <Grid2 size={4}>
+            <Grid2 size={3}>
               <TextField
                 size="small"
                 fullWidth
                 label="Идэвхитэй зээлийн нийт дүн"
+                value={FormatNumber(scoringData.totalPayment)}
+              />
+            </Grid2>
+            <Grid2 size={3}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Сарын төлөлт"
                 value={FormatNumber(scoringData.totalMonthlyPayment)}
               />
             </Grid2>
-            <Grid2 size={4}>
+            <Grid2 size={3}>
               <TextField
                 size="small"
                 fullWidth
@@ -454,7 +474,15 @@ const RegisterLoanRequest = ({
               />
             </Grid2>
             <Grid2 size={12}>
-              <Typography fontSize={17} fontWeight={"bold"}>
+              <Typography fontSize={19} fontWeight={"bold"}>
+                Зээлийн шаардлага
+              </Typography>
+            </Grid2>
+            <Grid2 size={12}>
+              <CustomDataGrid columns={loanReqColumn} data={requirementData} />
+            </Grid2>
+            <Grid2 size={12}>
+              <Typography fontSize={19} fontWeight={"bold"}>
                 Идэвхитэй зээлийн мэдээлэл
               </Typography>
             </Grid2>
@@ -464,16 +492,16 @@ const RegisterLoanRequest = ({
             <>
               <Grid2 size={12}>
                 <Typography
-                  fontSize={22}
+                  fontSize={19}
                   fontWeight="bold"
                   textAlign={"justify"}
                 >
-                  Онооны дэлгэрэнгүй жагсаалт
+                  Скорингийн дэлгэрэнгүй мэдээлэл
                 </Typography>
               </Grid2>
               {/* Left: Detailed Scores */}
               <Grid2
-                size={12}
+                size={6}
                 container
                 display={"flex"}
                 justifyContent="space-between"
@@ -482,7 +510,7 @@ const RegisterLoanRequest = ({
               >
                 <ScoreCard
                   title="Хэрэглэгчийн анкет"
-                  score={scoringData.customerInfoScore}
+                  score={scoringData?.customerInfoScore}
                   icon={<PermIdentityIcon color="primary" sx={{ mr: 1 }} />}
                   maxScore={82.5}
                   getSecondary={() => `-`}
@@ -490,7 +518,7 @@ const RegisterLoanRequest = ({
 
                 <ScoreCard
                   title="Одоогийн өрийн хэмжээ"
-                  score={scoringData.availableLoanAmount}
+                  score={scoringData?.availableLoanAmount}
                   icon={<PaymentsIcon color="primary" sx={{ mr: 1 }} />}
                   maxScore={137.5}
                   getSecondary={() => `-`}
@@ -498,7 +526,7 @@ const RegisterLoanRequest = ({
 
                 <ScoreCard
                   title="Зээлийн түүхийн урт"
-                  score={scoringData.loanHistoryLength}
+                  score={scoringData?.loanHistoryLength}
                   maxScore={110}
                   icon={<RestoreIcon color="primary" sx={{ mr: 1 }} />}
                   getColor={(score, max) =>
@@ -509,7 +537,7 @@ const RegisterLoanRequest = ({
 
                 <ScoreCard
                   title="Чанаргүй зээлийн түүх"
-                  score={scoringData.paymentHistory}
+                  score={scoringData?.paymentHistory}
                   icon={<GppBadIcon color="primary" sx={{ mr: 1 }} />}
                   maxScore={110}
                   getColor={(score, max) =>
@@ -520,10 +548,10 @@ const RegisterLoanRequest = ({
 
                 <ScoreCard
                   title="Өр орлогын харьцаа"
-                  score={scoringData.DTI}
+                  score={scoringData?.DTI}
                   maxScore={110}
                   getColor={() =>
-                    (scoringData.totalMonthlyPayment / scoringData.salary) *
+                    (scoringData?.totalMonthlyPayment / scoringData?.salary) *
                       100 >
                     45
                       ? "error.main"
@@ -531,34 +559,11 @@ const RegisterLoanRequest = ({
                   }
                   getSecondary={() =>
                     `${(
-                      (scoringData.totalMonthlyPayment / scoringData.salary) *
+                      (scoringData?.totalMonthlyPayment / scoringData?.salary) *
                       100
                     ).toFixed(1)}%`
                   }
                 />
-                <Grid2
-                  width={"32%"}
-                  display={"flex"}
-                  justifyContent={"flex-start"}
-                >
-                  <Button
-                    variant="contained"
-                    onClick={() => setScoringAdvice(true)}
-                    sx={{
-                      marginTop: 10.5,
-                      color: "white",
-                      bgcolor: "#3166cc",
-                      borderRadius: 5,
-                      height: "35px",
-                    }}
-                  >
-                    Зөвлөмж
-                    {/* <ThumbUpIcon
-                      fontSize="small"
-                      sx={{ ml: 1, color: "white" }}
-                    /> */}
-                  </Button>
-                </Grid2>
               </Grid2>
 
               {/* Center: Score Chart */}
@@ -567,7 +572,7 @@ const RegisterLoanRequest = ({
                 container
                 direction="column"
                 alignItems="center"
-                justifyContent="center"
+                justifyContent="flex-end"
                 bgcolor="#f5f7fb"
                 borderRadius={3}
                 p={3}
@@ -575,30 +580,70 @@ const RegisterLoanRequest = ({
                 <Typography fontSize={22} fontWeight="bold" mb={3}>
                   Нийт оноо: {scoringData.scoring.toFixed(1)} ({scoringValue})
                 </Typography>
+
                 {data ? (
                   <Box
-                    style={{ width: "300px", height: "350px" }}
-                    display={"flex"}
+                    style={{ width: "300px", height: "300px" }}
+                    display="flex"
                   >
                     <Doughnut data={data} options={options} />
                   </Box>
                 ) : (
                   <Typography>Түр хүлээнэ үү...</Typography>
                 )}
-              </Grid2>
 
-              {/* Right: Recommendations */}
-              <Grid2
-                size={6}
-                container
-                direction="column"
-                alignItems="center"
-                gap={2}
-              >
-                <CustomDataGrid
-                  data={scoringCategory}
-                  columns={scoringValueColumn}
-                />
+                {/* Button Row at the Bottom */}
+                <Grid2
+                  container
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  width="100%"
+                  mt="auto" // Push to bottom
+                >
+                  {/* Зөвлөмж Button */}
+                  <Grid2 item display="flex" alignItems="center">
+                    <Typography
+                      onClick={() => setScoringAdvice(true)}
+                      sx={{
+                        color: "#3166cc",
+                        cursor: "pointer",
+                        fontSize: 18,
+                      }}
+                    >
+                      Зөвлөмж
+                    </Typography>
+                    <PrivacyTipIcon
+                      onClick={() => setScoringAdvice(true)}
+                      sx={{
+                        color: "#1f79e7",
+                        cursor: "pointer",
+                        ml: 1,
+                      }}
+                    />
+                  </Grid2>
+                  {/* Тайлбар Button */}
+                  <Grid2 item display="flex" alignItems="center">
+                    <Typography
+                      onClick={() => setScoringList(true)}
+                      sx={{
+                        color: "#3166cc",
+                        cursor: "pointer",
+                        fontSize: 18,
+                      }}
+                    >
+                      Тайлбар
+                    </Typography>
+                    <HelpOutlineIcon
+                      onClick={() => setScoringList(true)}
+                      sx={{
+                        color: "#3166cc",
+                        cursor: "pointer",
+                        ml: 1,
+                      }}
+                    />
+                  </Grid2>
+                </Grid2>
               </Grid2>
             </>
 
@@ -617,23 +662,37 @@ const RegisterLoanRequest = ({
               </Button>
             </Grid2>
             <Grid2 size={6} display={"flex"} justifyContent={"flex-end"}>
-              <Button
-                variant="contained"
-                onClick={() => null}
-                sx={{
-                  width: "50%",
-                  color: "white",
-                  bgcolor: "#3166cc",
-                  borderRadius: 5,
-                }}
-              >
-                Хүсэлт үүсгэх
-              </Button>
+              {isAgree ? (
+                <Button
+                  variant="contained"
+                  onClick={() => buttonHandle()}
+                  sx={{
+                    width: "50%",
+                    color: "white",
+                    bgcolor: "#3166cc",
+                    borderRadius: 5,
+                  }}
+                >
+                  Хүсэлт үүсгэх
+                </Button>
+              ) : (
+                <Typography
+                  fontSize={16}
+                  sx={{
+                    color: "red",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "4px", // or any offset value you prefer
+                  }}
+                >
+                  Таны санхүүгийн мэдээлэл шаардлага хангахгүй байгаа тул хүсэлт
+                  үүсгэх боломжгүй.
+                </Typography>
+              )}
             </Grid2>
             <CustomModal
               open={scoringAdviceModal}
               onClose={() => setScoringAdvice(false)}
-              title="Зээлжих зэрэглэлийн онооны зөвлөмж"
+              title="Зээлжих зэрэглэлийн(Скоринг) зөвлөмж"
             >
               <Box sx={{ width: 1200, borderRadius: 3 }}>
                 <ScoringAdvice
@@ -642,8 +701,41 @@ const RegisterLoanRequest = ({
                 />
               </Box>
             </CustomModal>
+            <CustomModal
+              open={scoringList}
+              onClose={() => setScoringList(false)}
+              title="Зээлжих зэрэглэлийн(Скоринг) тайлбар"
+            >
+              <Box sx={{ width: 800, borderRadius: 3 }}>
+                <ScoringList data={scoringCategory} />
+              </Box>
+            </CustomModal>
+
+            <Snackbar
+              open={error}
+              autoHideDuration={3000}
+              onClose={() => setError(false)}
+              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+              <Alert
+                onClose={() => setError(false)}
+                severity="success"
+                sx={{ width: "100%" }}
+              >
+                Алдаа гарлаа
+              </Alert>
+            </Snackbar>
           </Grid2>
         </div>
+      ) : (
+        <>
+          <Grid2 size={12} display={"flex"} justifyContent={"center"}>
+            <Typography fontSize={17}>
+              Тухайн зээлийн бүтээгдэхүүнд хүсэлт бүртгэгдсэн ба судалгааны
+              шатанд явж байгаа тул та түр хүлээнэ үү.
+            </Typography>
+          </Grid2>
+        </>
       )}
     </>
   );

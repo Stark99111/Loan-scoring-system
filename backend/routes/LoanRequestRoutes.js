@@ -45,7 +45,7 @@ router.post("/registerLoanRequest", async (req, res) => {
       Loan: loan._id,
     });
 
-    if (registeredLoanRequest) {
+    if (registeredLoanRequest && registeredLoanRequest.isVerification) {
       return res.status(200).json({
         message: "Loan request already exists for this customer and loan",
         request: registeredLoanRequest,
@@ -66,6 +66,25 @@ router.post("/registerLoanRequest", async (req, res) => {
     return res.status(200).json(newLoanRequest);
   } catch (e) {
     console.error("Error in registerLoanRequest:", e);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.put("/isVerification/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const loanRequest = await LoanRequestModel.findById(id);
+
+    if (!loanRequest) {
+      return res.status(400).json({ message: "LoanRequest not found" });
+    }
+    loanRequest.isVerification = true;
+    await loanRequest.save();
+
+    return res.status(200).json(loanRequest);
+  } catch (e) {
+    console.error("Error in update loan request", e);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

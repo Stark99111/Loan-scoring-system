@@ -199,7 +199,7 @@ const RegisterCustomerRequest = ({
       }
     );
     if (status === 200) {
-      setRegisterLoanRequest(data.request);
+      setRegisterLoanRequest(data);
       handleOpenCredit();
     }
   };

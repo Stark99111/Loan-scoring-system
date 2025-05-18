@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   Button,
-  Modal,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -212,6 +211,7 @@ const LoanInfo = () => {
                   color: "#05357E",
                 }}
                 onClick={() => handleOpen(item._id)}
+                dis
               >
                 Дэлгэрэнгүй
               </Button>
@@ -327,7 +327,6 @@ const LoanInfo = () => {
                 }}
                 registeredLoanRequest={registeredLoanRequest}
                 customerData={customerData}
-                loanData={loanData.find((item) => item._id === id)}
                 onClose={() => {
                   setCustomerCreditModal(false);
                   setContinueSnackBar(true);

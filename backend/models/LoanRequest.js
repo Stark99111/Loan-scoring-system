@@ -22,6 +22,9 @@ const LoanRequestSchema = new mongoose.Schema({
   Interest: {
     type: Number,
   },
+  isVerification: {
+    type: Boolean,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

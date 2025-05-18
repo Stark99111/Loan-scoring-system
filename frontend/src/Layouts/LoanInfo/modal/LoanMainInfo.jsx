@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Tab, Tabs, Grid2, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Tab,
+  Tabs,
+  Grid2,
+  Button,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import GetLoanDataById from "../../../api/GetLoanDataById";
 import Divider from "@mui/material/Divider";
 import ChecklistRtlIcon from "@mui/icons-material/ChecklistRtl";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import CustomModal from "../../../Components/CustomModal";
 
 const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [loan, setLoan] = useState();
@@ -11,6 +21,9 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [con, setCon] = useState([]);
   const [tabValue, setTabValue] = useState(0);
   const [isRequirementAvailable, setIsRequirementAvailable] = useState(false);
+  const [approveModal, setApproveModal] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+
   useEffect(() => {
     GetLoanDataById(id).then((data) => {
       if (data) {
@@ -36,6 +49,73 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
       setIsRequirementAvailable(false);
     }
   }, [req]);
+
+  const CalculateScoringData = () => {
+    return (
+      <>
+        <Grid2 container spacing={2} p={1} borderRadius={4}>
+          <Grid2 size={12}>
+            <Typography fontSize={16} lineHeight={1.7} textAlign={"justify"}>
+              1. Зээлжих зэрэглэлийн оноо (scoring) тооцоолох зорилгоор таны
+              хувийн мэдээллийг дотоод өгөгдлийн санд хадгалж, тооцоолол хийхэд
+              ашиглахыг зөвшөөрж байна.
+            </Typography>
+          </Grid2>
+
+          <Grid2 size={12}>
+            <Typography fontSize={16} lineHeight={1.7} textAlign={"justify"}>
+              2. Энэхүү мэдээлэл нь зөвхөн дотоод хэрэгцээнд ашиглагдах бөгөөд
+              гуравдагч этгээдэд дамжуулахгүй болно.
+            </Typography>
+          </Grid2>
+
+          <Grid2 size={12} display="flex" justifyContent="center">
+            <FormControlLabel
+              sx={{
+                mt: 1,
+                border: "1px solid #d1d5db",
+                borderRadius: 2,
+                px: 2,
+                py: 1,
+                bgcolor: "#f9fafb",
+              }}
+              control={
+                <Checkbox
+                  checked={isChecked}
+                  onChange={(e) => setIsChecked(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={
+                <Typography fontSize={15}>
+                  Би дээрх нөхцөлийг зөвшөөрч байна.
+                </Typography>
+              }
+            />
+          </Grid2>
+
+          <Grid2 size={12} display="flex" justifyContent="flex-end">
+            <Button
+              variant="contained"
+              disabled={!isChecked}
+              sx={{
+                width: "30%",
+                color: "white",
+                bgcolor: "#3166cc",
+                borderRadius: 5,
+              }}
+              onClick={() => {
+                setApproveModal(false);
+                onClose();
+              }}
+            >
+              Үргэлжлүүлэх
+            </Button>
+          </Grid2>
+        </Grid2>
+      </>
+    );
+  };
 
   if (!loan) {
     return (
@@ -236,7 +316,7 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
           )}
         </>
       )}
-      {isRequirementAvailable && (
+      {isRequirementAvailable && loan.maxAmount && (
         <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
           <Button
             variant={"contained"}
@@ -246,12 +326,23 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
               bgcolor: "#3166cc",
               borderRadius: 5,
             }}
-            onClick={onClose}
+            onClick={() => setApproveModal(true)}
           >
             Хүсэлт үүсгэх
           </Button>
         </Grid2>
       )}
+
+      {/* Approval Modal */}
+      <CustomModal
+        open={approveModal}
+        onClose={() => setApproveModal(false)}
+        title="Зөвшөөрлийн хуудас"
+      >
+        <Box sx={{ width: 600, borderRadius: 3 }}>
+          <CalculateScoringData />
+        </Box>
+      </CustomModal>
     </Grid2>
   );
 };
