@@ -128,7 +128,7 @@ const LoanAmountCalculater = () => {
       </Grid2>
       <Grid2 size={2}>
         <TextField
-          label={"Зээлийн хугацаа "}
+          label={"Зээлийн хугацаа /сар/"}
           fullWidth
           size="small"
           value={loanTerm.toLocaleString("en-US")}
@@ -141,7 +141,7 @@ const LoanAmountCalculater = () => {
       </Grid2>
       <Grid2 size={2}>
         <TextField
-          label={"Зээлийн хүү "}
+          label={"Зээлийн хүү /жил/"}
           fullWidth
           size="small"
           value={intRate.toLocaleString("en-US")}

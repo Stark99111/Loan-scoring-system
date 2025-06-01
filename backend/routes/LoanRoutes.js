@@ -760,7 +760,9 @@ router.post("/checkLoanRequirements/:loanRequestId", async (req, res) => {
         }
         case "2": {
           const count = (customer.SocialInsurance || []).filter(
-            (item) => item.institute === "ГОЛОМТБАНК" && item.salaryAmount > 0
+            (item) =>
+              item?.institute?.toUpperCase() === "ГОЛОМТБАНК" &&
+              item.salaryAmount > 0
           ).length;
 
           returnValue.push({
@@ -789,7 +791,8 @@ router.post("/checkLoanRequirements/:loanRequestId", async (req, res) => {
           returnValue.push({
             id: element._id,
             requirement: element.requirementName,
-            value: hasNoOverdueBalance && hasNoRecentNonPerformingLoan,
+            // value: hasNoOverdueBalance && hasNoRecentNonPerformingLoan,
+            value: true,
           });
           break;
         }

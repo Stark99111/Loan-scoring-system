@@ -14,11 +14,17 @@ export default async function Login(domain, password, isAdmin) {
 
     const response = await axios.post(url, payload);
 
-    if (response?.status === 200) {
+    if (response?.status === 200 && !isAdmin) {
       const { token, user, userId } = response.data;
       localStorage.setItem("jwtToken", token);
       localStorage.setItem("user", user);
       localStorage.setItem("userId", userId);
+
+      return 200;
+    } else if (response?.status === 200 && isAdmin) {
+      const { token, user } = response.data;
+      localStorage.setItem("jwtToken", token);
+      localStorage.setItem("domain", user.domain);
 
       return 200;
     } else {

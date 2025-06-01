@@ -292,7 +292,6 @@ const MainInformation = ({ onClose }) => {
     calculateScoring();
   };
 
-
   return (
     <Box>
       <Grid2 container gap={3}>

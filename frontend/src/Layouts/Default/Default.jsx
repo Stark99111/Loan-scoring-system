@@ -38,10 +38,10 @@ async function updateRates() {
 
     currencyToMNT.forEach((currency) => {
       if (currency.code === base) {
-        currency.rate = 3480;
+        currency.rate = 3573.95;
       } else {
         const usdToCode = data.rates[currency.code];
-        const usdToMNT = 3480; // Use your static USD-MNT or pull from local bank
+        const usdToMNT = 3573.95; // Use your static USD-MNT or pull from local bank
         currency.rate = usdToCode ? (usdToMNT / usdToCode).toFixed(2) : null;
       }
     });

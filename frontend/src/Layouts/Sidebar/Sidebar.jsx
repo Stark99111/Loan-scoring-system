@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Drawer,
   List,
@@ -16,20 +16,46 @@ import BigImage from "../../Assets/bigimage.png";
 import Image from "../../Assets/image.png";
 import CreateIcon from "@mui/icons-material/Create";
 import LogoutIcon from "@mui/icons-material/Logout";
-import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
 import { Link, useNavigate } from "react-router-dom";
 import CalculateIcon from "@mui/icons-material/Calculate";
-import PolicyIcon from "@mui/icons-material/Policy";
-import ArticleIcon from "@mui/icons-material/Article";
 import PlagiarismIcon from "@mui/icons-material/Plagiarism";
-import ContentPasteIcon from "@mui/icons-material/ContentPaste";
-import CreditScoreIcon from "@mui/icons-material/CreditScore";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 function Sidebar() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const user = localStorage.getItem("user");
+  const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
+  console.log(user);
+
+  useEffect(() => {
+    if (localStorage.getItem("userId")) {
+      const token = localStorage.getItem("jwtToken");
+      const base64Payload = token.split(".")[1];
+
+      const jsonPayload = decodeURIComponent(
+        atob(base64Payload)
+          .split("")
+          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .join("")
+      );
+      setUser(JSON.parse(jsonPayload));
+      console.log(JSON.parse(jsonPayload));
+    } else if (localStorage.getItem("domain")) {
+      const token = localStorage.getItem("jwtToken");
+      const base64Payload = token.split(".")[1];
+
+      const jsonPayload = decodeURIComponent(
+        atob(base64Payload)
+          .split("")
+          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .join("")
+      );
+      setAdmin(JSON.parse(jsonPayload));
+      console.log(JSON.parse(jsonPayload));
+    }
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -37,6 +63,10 @@ function Sidebar() {
 
   const logout = () => {
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("domain");
+    localStorage.removeItem("admin");
     navigate("/");
     console.log("JWT token removed from localStorage");
     window.location.reload();
@@ -106,13 +136,30 @@ function Sidebar() {
         </>
       )}
       <Box sx={{ flexGrow: 1 }}>
-        <Box paddingLeft={3}>
-          <Typography color="white" fontSize={22}>
-            {isSidebarOpen ? "Зээл" : "-"}
-          </Typography>
-        </Box>
         <Box sx={{ width: 280 }} role="presentation">
           <List>
+            {user && (
+              <ListItem key={"Хэрэглэгчийн мэдээлэл"} disablePadding>
+                <ListItemButton component={Link} to="/calculateScoring">
+                  <ListItemIcon
+                    sx={{
+                      color: "white",
+                      paddingLeft: isSidebarOpen ? 1 : 0,
+                    }}
+                  >
+                    <AccountCircleIcon fontSize="medium" />
+                  </ListItemIcon>
+                  <ListItemText
+                    sx={{ color: "white" }}
+                    primaryTypographyProps={{
+                      fontSize: 14,
+                      color: "white",
+                    }}
+                    primary={"Хэрэглэгчийн мэдээлэл"}
+                  />
+                </ListItemButton>
+              </ListItem>
+            )}
             <ListItem key={"Зээлийн бүтээгдэхүүний мэдээлэл"} disablePadding>
               <ListItemButton component={Link} to="/loanInformation">
                 <ListItemIcon
@@ -130,113 +177,96 @@ function Sidebar() {
                 />
               </ListItemButton>
             </ListItem>
-            <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
-              {/* <ListItemButton component={Link} to="/registerLoan"> */}
-              <ListItemButton component={Link} to="/editLoanInformation">
-                <ListItemIcon
-                  sx={{
-                    color: "white",
-                    paddingLeft: isSidebarOpen ? 1 : 0,
-                  }}
-                >
-                  <CreateIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Зээлийн мэдээлэл засах"}
-                />
-              </ListItemButton>
-            </ListItem>
-            <ListItem key={"Тооцоолуур"} disablePadding>
-              <ListItemButton component={Link} to="/loanAmountCalculater">
-                <ListItemIcon
-                  sx={{
-                    color: "white",
-                    paddingLeft: isSidebarOpen ? 1 : 0,
-                  }}
-                >
-                  <CalculateIcon fontSize="medium" />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Тооцоолуур"}
-                />
-              </ListItemButton>
-            </ListItem>
-            <ListItem key={"Зээлийн хүсэлт"} disablePadding>
-              <ListItemButton component={Link} to="/loanRequest">
-                <ListItemIcon
-                  sx={{
-                    color: "white",
-                    paddingLeft: isSidebarOpen ? 1 : 0,
-                  }}
-                >
-                  <ListAltIcon fontSize="medium" />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                  primary={"Зээлийн хүсэлт"}
-                />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Box>
-        <Box paddingLeft={3}>
-          <Typography color="white" fontSize={22}>
-            {isSidebarOpen ? "Лавлах  " : "-"}
-          </Typography>
-        </Box>
-        <Box sx={{ width: 280 }} role="presentation">
-          <List>
-            <ListItem key={"Зээлийн эрэлтийн мэдээлэл"} disablePadding>
-              <ListItemButton component={Link} to="/loanProcedure">
-                <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
-                >
-                  <PlagiarismIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                    width: "80%",
-                  }}
-                  primary={"Зээлийн эрэлтийн мэдээлэл"}
-                />
-              </ListItemButton>
-            </ListItem>
-            {/* jurmiin biyleltiin tailan */}
-            <ListItem key={"Журмын биелэлтийн мэдээлэл"} disablePadding>
-              <ListItemButton component={Link} to="/procedureReport">
-                <ListItemIcon
-                  sx={{ color: "white", paddingLeft: isSidebarOpen ? 1 : 0 }}
-                >
-                  <ArticleIcon />
-                </ListItemIcon>
-                <ListItemText
-                  sx={{ color: "white", width: "75%" }}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "white",
-                    width: "90%",
-                  }}
-                  primary={"Журмын биелэлтийн мэдээлэл"}
-                />
-              </ListItemButton>
-            </ListItem>
+            {admin && (
+              <>
+                <ListItem key={"Зээлийн мэдээлэл засах"} disablePadding>
+                  {/* <ListItemButton component={Link} to="/registerLoan"> */}
+                  <ListItemButton component={Link} to="/editLoanInformation">
+                    <ListItemIcon
+                      sx={{
+                        color: "white",
+                        paddingLeft: isSidebarOpen ? 1 : 0,
+                      }}
+                    >
+                      <CreateIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ color: "white" }}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        color: "white",
+                      }}
+                      primary={"Зээлийн мэдээлэл засах"}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem key={"Зээлийн хүсэлт"} disablePadding>
+                  <ListItemButton component={Link} to="/loanRequests">
+                    <ListItemIcon
+                      sx={{
+                        color: "white",
+                        paddingLeft: isSidebarOpen ? 1 : 0,
+                      }}
+                    >
+                      <PlagiarismIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ color: "white" }}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        color: "white",
+                        width: "80%",
+                      }}
+                      primary={"Зээлийн хүсэлт"}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </>
+            )}
+            {user && (
+              <>
+                <ListItem key={"Тооцоолуур"} disablePadding>
+                  <ListItemButton component={Link} to="/loanAmountCalculater">
+                    <ListItemIcon
+                      sx={{
+                        color: "white",
+                        paddingLeft: isSidebarOpen ? 1 : 0,
+                      }}
+                    >
+                      <CalculateIcon fontSize="medium" />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ color: "white" }}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        color: "white",
+                      }}
+                      primary={"Тооцоолуур"}
+                    />
+                  </ListItemButton>
+                </ListItem>{" "}
+                <ListItem key={"Зээлийн хүсэлт"} disablePadding>
+                  <ListItemButton component={Link} to="/loanRequest">
+                    <ListItemIcon
+                      sx={{
+                        color: "white",
+                        paddingLeft: isSidebarOpen ? 1 : 0,
+                      }}
+                    >
+                      <ListAltIcon fontSize="medium" />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ color: "white" }}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        color: "white",
+                      }}
+                      primary={"Зээлийн хүсэлт"}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </>
+            )}
           </List>
         </Box>
       </Box>
@@ -252,7 +282,11 @@ function Sidebar() {
         }}
       >
         <Typography color="white" fontSize={16}>
-          {isSidebarOpen ? user : "-"}
+          {isSidebarOpen
+            ? user
+              ? `${user.idNumber}`
+              : `${admin.domain} /Admin/`
+            : "-"}
         </Typography>
       </Box>
 

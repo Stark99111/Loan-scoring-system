@@ -73,6 +73,7 @@ const EditLoanInformation = () => {
     GetLoan()
       .then((response) => {
         if (response && Array.isArray(response.data)) {
+          console.log(response.data);
           setLoanData(response.data);
         } else {
           setLoanData([]);

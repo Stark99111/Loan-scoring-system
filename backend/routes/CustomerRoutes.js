@@ -490,7 +490,7 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
       token,
       userId: existedCustomer._id,
-      user: existedCustomer.idNumber,
+      user: existedCustomer,
     });
   } catch (e) {
     console.error("Login error:", e);
@@ -940,8 +940,6 @@ router.post(
           const monthlyRepayment =
             (loanAmount * avgInterest) / (1 - Math.pow(1 + avgInterest, -term));
           totalPayment += monthlyRepayment * term;
-          console.log(monthlyRepayment);
-          console.log(monthlyRepayment * term);
           totalMonthlyPayment += monthlyRepayment;
         }
       }

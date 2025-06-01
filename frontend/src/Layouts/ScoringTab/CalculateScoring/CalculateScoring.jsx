@@ -1,615 +1,533 @@
 import React, { useEffect, useState } from "react";
 import {
   Grid2,
-  Typography,
+  TextField,
   Button,
+  Stepper,
+  Step,
+  StepLabel,
+  Typography,
   Box,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
-import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import CustomModal from "../../../Components/CustomModal";
-import CustomerMainInformation from "./tabs/MainInformation";
 import axios from "axios";
+import InfoIcon from "@mui/icons-material/Info";
+import HomeIcon from "@mui/icons-material/Home";
+import PersonIcon from "@mui/icons-material/Person";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
 import CustomDataGrid from "../../../Components/CustomDataGrid";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import ScoringAdvice from "./tabs/ScoringAdvice";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import BalanceIcon from "@mui/icons-material/Balance";
-import RestoreIcon from "@mui/icons-material/Restore";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+const steps = [
+  { label: "Үндсэн мэдээлэл", icon: InfoIcon },
+  { label: "Хаягийн мэдээлэл", icon: HomeIcon },
+  { label: "НДШ мэдээлэл", icon: PersonIcon },
+  { label: "ЗМС-ын мэдээлэл", icon: ContactMailIcon },
+];
 
-const ScoreCard = ({
-  title,
-  score,
-  maxScore,
-  icon,
-  unit = "оноо",
-  getColor,
-  getSecondary,
-}) => {
-  const color = getColor ? getColor(score, maxScore) : "text.primary";
-  const secondary = getSecondary ? getSecondary(score, maxScore) : null;
-
+const CustomStepIcon = ({ active, completed, icon }) => {
+  const Icon = steps[Number(icon) - 1].icon;
   return (
-    <Grid2
-      xs={6}
+    <Box
       sx={{
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        height: "120px",
-        backgroundColor: "#f9f9f9",
         display: "flex",
-        flexDirection: "column",
+        alignItems: "center",
         justifyContent: "center",
-        px: 2,
-        boxShadow: 1,
-        width: "48%",
+        width: 40,
+        height: 40,
+        borderRadius: "50%",
+        bgcolor: active || completed ? "primary.main" : "grey.400",
+        color: "white",
+        transition: "all 0.3s ease",
       }}
     >
-      <Box display="flex" alignItems="center" mb={0.5}>
-        {icon || <BalanceIcon color="primary" sx={{ mr: 1 }} />}
-        <Typography variant="subtitle1" fontWeight={600}>
-          {title}
-        </Typography>
-      </Box>
-
-      <Typography variant="h6">
-        {Math.round(score)} {unit}
-      </Typography>
-
-      {secondary !== null && (
-        <Typography variant="body2" mb={0.5} color={color}>
-          {secondary}
-        </Typography>
-      )}
-
-      <Typography variant="caption" color="text.secondary">
-        Дээд оноо: {Math.round(maxScore)}
-      </Typography>
-    </Grid2>
+      <Icon />
+    </Box>
   );
 };
 
-const options = {
-  layout: {
-    padding: {
-      right: -30, // Shifts legend further left
-    },
-  },
-  plugins: {
-    legend: {
-      position: "left",
-      align: "center",
-      labels: {
-        boxWidth: 40,
-        padding: 10,
-      },
-    },
-  },
-};
-
 const CalculateScoring = () => {
-  const [isScoringCalculated, setIsScoringCalculated] = useState(null);
-  const [approveModal, setApproveModal] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
-  const [customerMainInfoModal, setCustomerMainInfoModal] = useState(false);
-  const [customerData, setCustomerData] = useState();
-  const [scoringData, setScoringData] = useState();
+  const [activeStep, setActiveStep] = useState(0);
   const userId = localStorage.getItem("userId");
-  const [data, setData] = useState();
-  const [scoringValue, setCategoryValue] = useState("");
-  const [scoringDesc, setScoringDesc] = useState();
-  const [scoringAdviceModal, setScoringAdvice] = useState(false);
-  const [loanHistoryScore, setLoanHistoryScore] = useState(0);
-  const [availableLoanAmountScore, setAvailableLoanAmountScore] = useState(0);
-  const [loanHistoryLengthScore, setLoanHistoryLengthScore] = useState(0);
-  const [DTI, setDTI] = useState(0);
-
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
-  const scoringCategory = [
-    {
-      maxAmount: 850,
-      lowAmount: 800,
-      text: "Маш сайн",
-      desc: "Зээл авахад хамгийн таатай нөхцөлтэй, бага хүүтэй зээл авах боломжтой.",
-    },
-    {
-      maxAmount: 799,
-      lowAmount: 740,
-      text: "Сайн",
-      desc: "Зээлийн нөхцөл таатай, ихэнх зээлийг батлах магадлал өндөр.",
-    },
-    {
-      maxAmount: 739,
-      lowAmount: 670,
-      text: "Дундаж",
-      desc: "Ихэнх зээлд хамрагдах боломжтой ч зарим тохиолдолд өндөр хүү санал болгож магадгүй.",
-    },
-    {
-      maxAmount: 669,
-      lowAmount: 580,
-      text: "Муу",
-      desc: "Зээлийн нөхцөл хатуу, өндөр хүүтэй байх магадлалтай. Батлан даалт шаардаж болзошгүй.",
-    },
-    {
-      maxAmount: 579,
-      lowAmount: 300,
-      text: "Маш муу",
-      desc: "Зээл авах магадлал маш бага, нэмэлт барьцаа, батлан даалт шаардана.",
-    },
-  ];
-
-  const scoringValueColumn = [
-    {
-      label: "Онооны хүрээ",
-      accessor: "numberValues",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-      renderCell: (params) => {
-        return params.lowAmount + "-" + params.maxAmount;
-      },
-    },
-    {
-      label: "Зэрэглэл",
-      accessor: "text",
-      flex: 1,
-      headerAlign: "center",
-      contentAlign: "center",
-    },
-    {
-      label: "Тайлбар",
-      accessor: "desc",
-      flex: 4,
-      headerAlign: "center",
-      contentAlign: "justify",
-    },
-  ];
-
-  const fetchCustomerData = async () => {
-    const res = await axios.get(
-      `http://localhost:5000/Customer/getAllById/${userId}`
-    );
-    if (res.data) {
-      setCustomerData(res.data);
-      if (res.data.Scoring) {
-        setScoringData(res.data.Scoring);
-        setIsScoringCalculated(true);
-      } else {
-        setIsScoringCalculated(false);
-      }
-    }
-  };
+  const [customerData, setCustomerData] = useState();
+  const [SocialInsurance, setSocialInsurance] = useState([]);
+  const [AddressInformation, setAddressInformation] = useState();
+  const [CreditDatabase, setCreditDatabase] = useState([]);
+  const [CustomerMainInformation, setCustomerMainInformation] = useState();
 
   useEffect(() => {
+    const fetchCustomerData = async () => {
+      const res = await axios.get(
+        `http://localhost:5000/Customer/getAllById/${userId}`
+      );
+      if (res.data) {
+        setCustomerData(res.data);
+        const sortedInsurance = (res.data.SocialInsurance || []).sort(
+          (a, b) => new Date(a.paidDate) - new Date(b.paidDate)
+        );
+        setSocialInsurance(sortedInsurance);
+
+        setAddressInformation(res.data.AddressInformation || null);
+        setCreditDatabase(res.data.CreditDatabase || null);
+        setCustomerMainInformation(res.data.CustomerMainInformation || null);
+      }
+    };
     if (userId) {
       fetchCustomerData();
     }
   }, [userId]);
-
-  useEffect(() => {
-    if (isScoringCalculated === false) {
-      setApproveModal(true);
+  const handleNext = () => {
+    if (activeStep < steps.length - 1) {
+      setActiveStep((prev) => prev + 1);
     }
-  }, [isScoringCalculated]);
-
-  useEffect(() => {
-    if (scoringData) {
-      const string = scoringCategory.find(
-        (item) =>
-          scoringData.scoring >= item.lowAmount &&
-          scoringData.scoring < item.maxAmount
-      )?.text;
-
-      if (string) {
-        setCategoryValue(string);
-      }
-
-      const weighted = {
-        availableLoanAmount:
-          scoringData.availableLoanAmount / (scoringData.scoring / 100),
-        paymentHistory:
-          scoringData.paymentHistory / (scoringData.scoring / 100),
-        DTI: scoringData.DTI / (scoringData.scoring / 100),
-        loanHistoryLength:
-          scoringData.loanHistoryLength / (scoringData.scoring / 100),
-        loanHistory: scoringData.loanHistory / (scoringData.scoring / 100),
-      };
-
-      // Total weighted score
-      const total = Object.values(weighted).reduce((sum, val) => sum + val, 0);
-
-      // Convert to percentage for the pie chart
-      const pieData = Object.entries(weighted).map(([label, value]) => ({
-        name: label,
-        value: parseFloat(((value / total) * 100).toFixed(1)), // convert to %
-      }));
-
-      console.log(pieData);
-
-      if (pieData) {
-        const dataPie = {
-          labels: pieData.map((item) => {
-            const translations = {
-              loanHistory: "Зээлийн тоо",
-              paymentHistory: "Зээлийн төлөлтийн түүх",
-              availableLoanAmount: "Одоогийн өрийн хэмжээ",
-              loanHistoryLength: "Зээлийн түүхийн урт",
-              DTI: "Өр орлогын харьцаа",
-            };
-            return translations[item.name] || item.name;
-          }),
-          datasets: [
-            {
-              label: "FICO Components",
-              data: pieData.map((item) => item.value),
-              backgroundColor: [
-                "#0947a6",
-                "#1e6efb",
-                "#5ca9ff",
-                "#9dcfff",
-                "#d4e9ff",
-              ],
-              borderWidth: 1,
-            },
-          ],
-        };
-
-        setData(dataPie);
-      }
-    }
-  }, [scoringData]);
-
-  useEffect(() => {
-    const translations = {
-      loanHistory: "Зээлийн түүх",
-      availableLoanAmount: "Одоогийн өрийн хэмжээ",
-      loanHistoryLength: "Зээлийн түүхийн урт",
-      DTI: "Өр орлогын харьцаа",
-    };
-    const scores = {
-      loanHistory: 220,
-      availableLoanAmount: 165,
-      loanHistoryLength: 55,
-      DTI: 110,
-    };
-    if (scoringData) {
-      setLoanHistoryScore(scoringData.loanHistory);
-      setAvailableLoanAmountScore(scoringData.availableLoanAmount);
-      setLoanHistoryLengthScore(scoringData.loanHistoryLength);
-      setDTI(scoringData.DTI);
-      const mapped = Object.keys(translations).map((key) => ({
-        label: translations[key],
-        value: scoringData[key],
-        maxValue: scores[key],
-      }));
-
-      console.log(mapped);
-      setScoringDesc(mapped);
-    }
-  }, [scoringData]);
-
-  const CalculateScoringData = () => {
-    return (
-      <>
-        <Grid2 container spacing={2} p={1} borderRadius={4}>
-          <Grid2 size={12}>
-            <Typography fontSize={16} lineHeight={1.7} textAlign={"justify"}>
-              1. Зээлжих зэрэглэлийн оноо (scoring) тооцоолох зорилгоор таны
-              хувийн мэдээллийг дотоод өгөгдлийн санд хадгалж, тооцоолол хийхэд
-              ашиглахыг зөвшөөрж байна.
-            </Typography>
-          </Grid2>
-
-          <Grid2 size={12}>
-            <Typography fontSize={16} lineHeight={1.7} textAlign={"justify"}>
-              2. Энэхүү мэдээлэл нь зөвхөн дотоод хэрэгцээнд ашиглагдах бөгөөд
-              гуравдагч этгээдэд дамжуулахгүй болно.
-            </Typography>
-          </Grid2>
-
-          <Grid2 size={12} display="flex" justifyContent="center">
-            <FormControlLabel
-              sx={{
-                mt: 1,
-                border: "1px solid #d1d5db",
-                borderRadius: 2,
-                px: 2,
-                py: 1,
-                bgcolor: "#f9fafb",
-              }}
-              control={
-                <Checkbox
-                  checked={isChecked}
-                  onChange={(e) => setIsChecked(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={
-                <Typography fontSize={15}>
-                  Би дээрх нөхцөлийг зөвшөөрч байна.
-                </Typography>
-              }
-            />
-          </Grid2>
-
-          <Grid2 size={12} display="flex" justifyContent="flex-end">
-            <Button
-              variant="contained"
-              disabled={!isChecked}
-              sx={{
-                width: "30%",
-                color: "white",
-                bgcolor: "#3166cc",
-                borderRadius: 5,
-              }}
-              onClick={() => {
-                setApproveModal(false);
-                setCustomerMainInfoModal(true);
-              }}
-            >
-              Үргэлжлүүлэх
-            </Button>
-          </Grid2>
-        </Grid2>
-      </>
-    );
   };
+
+  const handleBack = () => {
+    if (activeStep > 0) {
+      setActiveStep((prev) => prev - 1);
+    }
+  };
+  const columns = [
+    {
+      label: "Ажил олгогчын нэр",
+      accessor: "institute",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Ажил олгогчын код",
+      accessor: "instituteCode",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Цалингийн хэмжээ",
+      accessor: "salaryAmount",
+      flex: 3,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.salaryAmount != null) {
+          return params.salaryAmount.toLocaleString() + " MNT";
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Дүн",
+      accessor: "amount",
+      flex: 3,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.amount != null) {
+          return params.amount.toLocaleString() + " MNT";
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Төлсөн огноо",
+      accessor: "updatedDate",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.paidDate) {
+          const date = new Date(params.paidDate);
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${month}/${year}`;
+        } else {
+          return "-";
+        }
+      },
+    },
+  ];
+
+  const columnZMS = [
+    {
+      label: "Байгууллага",
+      accessor: "loanInstitution",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+    },
+    {
+      label: "Анх олгосон дүн",
+      accessor: "amount",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.firstLoanAmount != null) {
+          return (
+            params.firstLoanAmount.toLocaleString(2) + " " + params.currency
+          );
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Зээлийн үлдэгдэл",
+      accessor: "balance",
+      flex: 2,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.balance != null) {
+          return params.balance.toLocaleString(2) + " " + params.currency;
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Хүү (%)",
+      accessor: "institute",
+      flex: 1,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.interest != null) {
+          return params.interest.toFixed(2) + " %";
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Олгосон огноо",
+      accessor: "updatedDate",
+      flex: 1.5,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.payDate) {
+          const date = new Date(params.payDate);
+          const formattedDate = date.toLocaleDateString("en-GB");
+          return formattedDate;
+        } else {
+          return "-";
+        }
+      },
+    },
+    {
+      label: "Төлөх ёстой огноо",
+      accessor: "updatedDate",
+      flex: 1.5,
+      headerAlign: "center",
+      contentAlign: "center",
+      renderCell: (params) => {
+        if (params.paidDate) {
+          const date = new Date(params.paidDate);
+          const formattedDate = date.toLocaleDateString("en-GB");
+          return formattedDate;
+        } else {
+          return "-";
+        }
+      },
+    },
+  ];
 
   {
     return (
-      <div>
-        <Grid2
-          container
-          bgcolor="white"
-          borderRadius={4}
-          p={4}
-          spacing={4}
-          boxShadow={3}
-        >
-          <Grid2 size={12}>
-            <Typography fontWeight="bold" fontSize={24} pl={1}>
-              Зээлжих зэрэглэлийн оноо (Скоринг)
-            </Typography>
-          </Grid2>
+      <Grid2
+        container
+        gap={2}
+        display={"flex"}
+        justifyContent={"flex-start"}
+        bgcolor={"white"}
+        borderRadius={2}
+        p={3}
+      >
+        {/* Stepper */}
+        {/* <Grid2 size={12}>
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {steps.map((step, index) => (
+              <Step key={step.label}>
+                <StepLabel StepIconComponent={CustomStepIcon}>
+                  <Typography fontSize={14}>{step.label}</Typography>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Grid2> */}
 
-          {isScoringCalculated ? (
-            <>
-              {/* Left: Detailed Scores */}
-              <Grid2
-                size={4}
-                container
-                display={"flex"}
-                justifyContent="space-between"
-                p={0}
-                gap={2}
-              >
-                <Typography
-                  fontSize={22}
-                  fontWeight="bold"
-                  textAlign={"justify"}
-                >
-                  Онооны дэлгэрэнгүй жагсаалт
-                </Typography>
-                <ScoreCard
-                  title="Зээлийн төлөлтийн түүх"
-                  score={scoringData.paymentHistory}
-                  maxScore={192.5}
-                  getColor={(score, max) =>
-                    Math.round(100 - (score / max) * 100) / 12 > 5
-                      ? "error.main"
-                      : "success.main"
-                  }
-                  getSecondary={(score, max) =>
-                    (Math.round(100 - (score / max) * 100) / 12).toFixed(1) +
-                    " жил"
-                  }
-                />
-
-                <ScoreCard
-                  title="Одоогийн өрийн хэмжээ"
-                  score={scoringData.availableLoanAmount}
-                  maxScore={165}
-                  getColor={(score, max) =>
-                    Math.round(100 - (score / max) * 100) > 70
-                      ? "error.main"
-                      : "success.main"
-                  }
-                  getSecondary={(score, max) =>
-                    `${Math.round(100 - (score / max) * 100)}%`
-                  }
-                />
-
-                <ScoreCard
-                  title="Зээлийн түүхийн урт"
-                  score={scoringData.loanHistoryLength}
-                  maxScore={55}
-                  icon={<RestoreIcon color="primary" sx={{ mr: 1 }} />}
-                  getColor={(score, max) =>
-                    Math.round((score / 55) * 5) < 3
-                      ? "error.main"
-                      : "success.main"
-                  }
-                  getSecondary={(score) => `${(score / 55) * 5} жил`}
-                />
-
-                <ScoreCard
-                  title="Өр орлогын харьцаа"
-                  score={scoringData.DTI}
-                  maxScore={82}
-                  getColor={(score, max) =>
-                    100 - (score / max) * 100 > 45
-                      ? "error.main"
-                      : "success.main"
-                  }
-                  getSecondary={(score, max) =>
-                    `${(100 - (score / max) * 100).toFixed(1)}%`
-                  }
-                />
-
-                <ScoreCard
-                  title="Зээлийн тоо"
-                  score={scoringData.loanHistory}
-                  maxScore={55}
-                  getColor={(score, max) =>
-                    Math.round((score / max) * 100) > 2
-                      ? "error.main"
-                      : "success.main"
-                  }
-                  getSecondary={(score, max) =>
-                    `${Math.round((score / max) * 5)} зээл`
-                  }
-                />
-
-                <Grid2 size={12} display={"flex"} justifyContent={"flex-end"}>
-                  <Button
-                    variant="contained"
-                    onClick={() => setScoringAdvice(true)}
-                    sx={{
-                      width: "40%",
-                      color: "white",
-                      bgcolor: "#3166cc",
-                      borderRadius: 5,
-                      height: "35px",
-                    }}
-                  >
-                    Зөвлөмж
-                    {/* <ThumbUpIcon
-                      fontSize="small"
-                      sx={{ ml: 1, color: "white" }}
-                    /> */}
-                  </Button>
-                </Grid2>
-              </Grid2>
-
-              {/* Center: Score Chart */}
-              <Grid2
-                size={4}
-                container
-                direction="column"
-                alignItems="center"
-                justifyContent="center"
-                bgcolor="#f5f7fb"
-                borderRadius={3}
-                p={3}
-              >
-                <Typography fontSize={22} fontWeight="bold" mb={2}>
-                  Нийт оноо: {scoringData.scoring} ({scoringValue})
-                </Typography>
-                {data ? (
-                  <Box
-                    style={{ width: "450px", height: "450px" }}
-                    display={"flex"}
-                    marginTop={-10}
-                    marginBottom={-12}
-                  >
-                    <Doughnut data={data} options={options} />
-                  </Box>
-                ) : (
-                  <Typography>Түр хүлээнэ үү...</Typography>
-                )}
-              </Grid2>
-
-              {/* Right: Recommendations */}
-              <Grid2
-                size={3.8}
-                container
-                direction="column"
-                alignItems="center"
-                gap={2}
-              >
-                <Typography fontSize={22} fontWeight="bold">
-                  Онооны тайлбар
-                </Typography>
-                <CustomDataGrid
-                  data={scoringCategory}
-                  columns={scoringValueColumn}
-                />
-              </Grid2>
-
-              {/* Button - Bottom Right */}
-              <Grid2 size={12} display="flex" justifyContent="flex-end">
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={() => setApproveModal(true)}
-                  sx={{
-                    width: "17%",
-                    color: "white",
-                    bgcolor: "#3166cc",
-                    borderRadius: 5,
-                  }}
-                >
-                  Зэрэглэл бодуулах
-                  <ArrowForwardIosIcon
-                    fontSize="small"
-                    sx={{ ml: 1, color: "white" }}
-                  />
-                </Button>
-              </Grid2>
-            </>
-          ) : (
-            approveModal &&
-            customerMainInfoModal && (
-              <Grid2 size={12} display="flex" justifyContent="center">
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={() => setApproveModal(true)}
-                  sx={{
-                    width: "100%",
-                    color: "white",
-                    bgcolor: "#3166cc",
-                    borderRadius: 5,
-                  }}
-                >
-                  Зэрэглэл тооцоолуулах
-                </Button>
-              </Grid2>
-            )
-          )}
+        {/* Step Content */}
+        {/* {activeStep === 0 && (
+          <> */}
+        <Grid2 size={12}>
+          <Typography fontSize={22} fontWeight={"bold"}>
+            Үндсэн мэдээлэл
+          </Typography>
         </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="Овог"
+            value={CustomerMainInformation?.lastName}
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     lastName: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="Нэр"
+            value={CustomerMainInformation?.firstName}
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     firstName: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="Ургийн овог"
+            value={CustomerMainInformation?.familyName}
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     familyName: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="Хүйс"
+            value={CustomerMainInformation?.sex}
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     sex: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="Иргэншил"
+            value={CustomerMainInformation?.nation}
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     nation: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            size="small"
+            label="РД"
+            value={customerData?.idNumber}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Төрсөн огноо"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            value={
+              CustomerMainInformation?.bornDate
+                ? new Date(CustomerMainInformation?.bornDate)
+                    .toISOString()
+                    .split("T")[0]
+                : ""
+            }
+            // onChange={(e) => {
+            //   setCustomerMainInformation({
+            //     ...CustomerMainInformation,
+            //     bornDate: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        {/* </>
+        )} */}
 
-        
+        {/* {activeStep === 1 && (
+          <> */}
+        <Grid2 size={12}>
+          <Typography fontSize={22} fontWeight={"bold"}>
+            Хаягийн мэдээлэл
+          </Typography>
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Улс"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.country}
+            // onChange={(e) => {
+            //   setAddressInformation({
+            //     ...AddressInformation,
+            //     country: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Хот"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.city}
+            // onChange={(e) => {
+            //   setAddressInformation({
+            //     ...AddressInformation,
+            //     city: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Баг/дүүрэг"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.district.CategoryName}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Гудамж"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.street}
+            // onChange={(e) => {
+            //   setAddressInformation({
+            //     ...AddressInformation,
+            //     street: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Тоот"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.number}
+            // onChange={(e) => {
+            //   setAddressInformation({
+            //     ...AddressInformation,
+            //     number: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        <Grid2 size={2.9}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Сууцын төрөл"
+            InputLabelProps={{ shrink: true }}
+            value={AddressInformation?.typeOfSeat}
+            // onChange={(e) => {
+            //   setAddressInformation({
+            //     ...AddressInformation,
+            //     typeOfSeat: e.target.value,
+            //   });
+            // }}
+          />
+        </Grid2>
+        {/* </>
+        )} */}
 
-        {/* Main Info Modal */}
-        <CustomModal
-          open={customerMainInfoModal}
-          onClose={() => setCustomerMainInfoModal(false)}
-          title="Үндсэн мэдээлэл"
-        >
-          <Box sx={{ width: 1200, borderRadius: 3 }}>
-            <CustomerMainInformation
-              onClose={() => {
-                setCustomerMainInfoModal(false);
-                fetchCustomerData();
-              }}
-            />
-          </Box>
-        </CustomModal>
+        {/* {activeStep === 2 && ( */}
+        <Grid2 size={12}>
+          <Typography fontSize={22} fontWeight={"bold"}>
+            НДШ мэдээлэл
+          </Typography>
+        </Grid2>
+        <Grid2 size={12}>
+          <CustomDataGrid
+            data={SocialInsurance}
+            columns={columns}
+            pagination={true}
+          />
+        </Grid2>
+        {/* )} */}
 
-        <CustomModal
-          open={scoringAdviceModal}
-          onClose={() => setScoringAdvice(false)}
-          title="Зээлжих зэрэглэлийн онооны зөвлөмж"
-        >
-          <Box sx={{ width: 1200, borderRadius: 3 }}>
-            <ScoringAdvice
-              onClose={() => setScoringAdvice(false)}
-              components={scoringDesc}
-            />
-          </Box>
-        </CustomModal>
-      </div>
+        <Grid2 size={12}>
+          <Typography fontSize={22} fontWeight={"bold"}>
+            ЗМС-ын мэдээлэл
+          </Typography>
+        </Grid2>
+        {/* {activeStep === 3 && ( */}
+        <Grid2 size={12}>
+          <CustomDataGrid
+            data={CreditDatabase}
+            columns={columnZMS}
+            pagination={true}
+          />
+        </Grid2>
+        {/* )} */}
+        {/* <Grid2 size={12} display="flex" justifyContent="space-between" mt={2.9}>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={activeStep === 0}
+            sx={{
+              width: "10%",
+              color: "white",
+              bgcolor: activeStep === 0 ? "ffff" : "#3166cc",
+              borderRadius: 5,
+            }}
+          >
+            Буцах
+          </Button>
+          <Button
+            variant="contained"
+            sx={{
+              width: "20%",
+              color: "white",
+              bgcolor: "#3166cc",
+              borderRadius: 5,
+            }}
+            disabled={activeStep === 3}
+            onClick={handleNext}
+          >
+            {activeStep === steps.length - 1
+              ? "Зэрэглэл тооцоолуулах"
+              : "Үргэлжлүүлэх"}
+          </Button>
+        </Grid2> */}
+      </Grid2>
     );
   }
 };

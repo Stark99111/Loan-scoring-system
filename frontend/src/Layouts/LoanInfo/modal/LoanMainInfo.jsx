@@ -23,6 +23,13 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
   const [isRequirementAvailable, setIsRequirementAvailable] = useState(false);
   const [approveModal, setApproveModal] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (localStorage.getItem("userId")) {
+      setUser(localStorage.getItem("userId"));
+    }
+  }, []);
 
   useEffect(() => {
     GetLoanDataById(id).then((data) => {
@@ -316,7 +323,7 @@ const LoanDetailsModal = ({ id, style, onClose, customerData }) => {
           )}
         </>
       )}
-      {isRequirementAvailable && loan.maxAmount && (
+      {user && isRequirementAvailable && loan.maxAmount && (
         <Grid2 size={11.4} pt={2} display={"flex"} justifyContent={"flex-end"}>
           <Button
             variant={"contained"}

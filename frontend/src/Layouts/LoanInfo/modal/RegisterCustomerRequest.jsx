@@ -280,7 +280,7 @@ const RegisterCustomerRequest = ({
         <TextField
           size="small"
           fullWidth
-          label="Зээлийн хүү /жил/"
+          label="Зээлийн хүү /сар/"
           value={interest}
           onChange={(e) => setInterest(e.target.value)}
           inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}

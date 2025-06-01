@@ -53,11 +53,17 @@ const LoanInfo = () => {
   const [loanModal, setLoanModal] = useState(false);
   const [id, setId] = useState();
   const [loanRiskModal, setLoanRIskModal] = useState(false);
-  const user = localStorage.getItem("userId");
+  const [user, setUser] = useState(null);
   const [customerData, setCustomerData] = useState(null);
   const [customerCreditModal, setCustomerCreditModal] = useState(false);
   const [continueSnackBar, setContinueSnackBar] = useState(false);
   const [registeredLoanRequest, setRegisterLoanRequest] = useState("");
+
+  useEffect(() => {
+    if (localStorage.getItem("userId")) {
+      setUser(localStorage.getItem("userId"));
+    }
+  });
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -68,7 +74,9 @@ const LoanInfo = () => {
         setCustomerData(data);
       }
     };
-    fetchCustomerData();
+    if (user) {
+      fetchCustomerData();
+    }
   }, [user]);
 
   const handleOpenCredit = () => {

@@ -14,6 +14,7 @@ router.get("/loanRequests/:customerId", async (req, res) => {
         path: "Loan",
         populate: [{ path: "bankCategories" }, { path: "loanCategories" }],
       })
+      .select("-image")
       .populate("Customer");
 
     res.status(200).json(loanRequests);
@@ -45,7 +46,10 @@ router.post("/registerLoanRequest", async (req, res) => {
       Loan: loan._id,
     });
 
-    if (registeredLoanRequest && registeredLoanRequest.isVerification) {
+    if (
+      registeredLoanRequest &&
+      registeredLoanRequest.isVerification === true
+    ) {
       return res.status(200).json({
         message: "Loan request already exists for this customer and loan",
         request: registeredLoanRequest,
@@ -67,6 +71,37 @@ router.post("/registerLoanRequest", async (req, res) => {
   } catch (e) {
     console.error("Error in registerLoanRequest:", e);
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/getAll", async (req, res) => {
+  try {
+    const loanRequests = await LoanRequestModel.find()
+      .populate({
+        path: "Loan",
+        select: "-image",
+        populate: [{ path: "bankCategories" }, { path: "loanCategories" }],
+      })
+      .populate({
+        path: "Customer",
+        populate: [
+          {
+            path: "AddressInformation",
+            populate: [{ path: "district" }],
+          },
+          { path: "CreditDatabase" },
+          { path: "SocialInsurance" },
+          { path: "CustomerMainInformation" },
+          { path: "SocialInsurance" },
+        ],
+      })
+      .populate("Scoring"); // ✅ correct method
+    const filtered = loanRequests.filter((item) => item.isVerification);
+
+    res.status(200).json(filtered);
+  } catch (e) {
+    console.error("Error in fetch loan requests", e);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

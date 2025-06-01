@@ -81,11 +81,32 @@ router.post("/login", async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
-      user: employee,s
+      user: employee,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+router.put("/updatePassword", async (req, res) => {
+  try {
+    const { domain, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await EmployeeModel.updateOne(
+      { domain },
+      { $set: { password: hashedPassword } }
+    );
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/get", (req, res) => {
+  res.status(200).send("Hello world");
 });
 
 module.exports = router;
